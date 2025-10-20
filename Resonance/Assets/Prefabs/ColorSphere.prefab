@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &558099710350705355
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5754763436053455343}
+  - component: {fileID: 1564423398254632749}
+  - component: {fileID: 7208849347067625278}
+  m_Layer: 0
+  m_Name: ColorSphere
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5754763436053455343
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 558099710350705355}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.53999996, y: 3.29, z: 7.82}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1564423398254632749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 558099710350705355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f6adcb17aac29345b1f869c55910da5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radius: 0
+  fadeWidth: 1.49
+  animateRadius: 1
+  pulseSpeed: 1
+  minRadius: 3
+  maxRadius: 7
+  showGizmo: 1
+  gizmoColor: {r: 1, g: 0.5, b: 0, a: 0.5}
+  autoRegister: 1
+--- !u!114 &7208849347067625278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 558099710350705355}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e48aa5e95e92d8c4b9c6f5266f6521dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showVisual: 1
+  sphereColor: {r: 1, g: 0.5, b: 0, a: 0.3}
+  rimPower: 3
+  rimIntensity: 1
+  autoCreateMesh: 1
