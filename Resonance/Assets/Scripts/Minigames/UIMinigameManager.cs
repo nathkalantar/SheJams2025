@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class UIMinigameManager : MonoBehaviour
 {
@@ -40,6 +41,17 @@ public class UIMinigameManager : MonoBehaviour
         currentData = data;
         SetupMinigame();
         minigamePanel.SetActive(true);
+        
+        CanvasGroup panelCanvasGroup = minigamePanel.GetComponent<CanvasGroup>();
+        if (panelCanvasGroup == null)
+            panelCanvasGroup = minigamePanel.AddComponent<CanvasGroup>();
+            
+        panelCanvasGroup.alpha = 0f;
+        minigamePanel.transform.localScale = Vector3.one * 0.8f;
+        
+        panelCanvasGroup.DOFade(1f, 0.3f).SetUpdate(true);
+        minigamePanel.transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack).SetUpdate(true);
+        
         Time.timeScale = 0f;
     }
 
@@ -122,9 +134,17 @@ public class UIMinigameManager : MonoBehaviour
 
     void CloseMinigame()
     {
-        minigamePanel.SetActive(false);
-        Time.timeScale = 1f;
-        MinigameEventSystem.CloseMinigame();
+        CanvasGroup panelCanvasGroup = minigamePanel.GetComponent<CanvasGroup>();
+        if (panelCanvasGroup == null)
+            panelCanvasGroup = minigamePanel.AddComponent<CanvasGroup>();
+            
+        panelCanvasGroup.DOFade(0f, 0.2f).SetUpdate(true);
+        minigamePanel.transform.DOScale(Vector3.one * 0.8f, 0.2f).SetEase(Ease.InBack).SetUpdate(true)
+            .OnComplete(() => {
+                minigamePanel.SetActive(false);
+                Time.timeScale = 1f;
+                MinigameEventSystem.CloseMinigame();
+            });
     }
 
     public void ResetMinigame()

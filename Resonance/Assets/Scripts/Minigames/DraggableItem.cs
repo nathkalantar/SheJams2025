@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using DG.Tweening;
 
 public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -30,7 +31,10 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     {
         if (isPlaced) return;
         Debug.Log("Begin drag started");
-        canvasGroup.alpha = 0.6f;
+        
+        rectTransform.DOKill();
+        rectTransform.DOScale(Vector3.one * 1.1f, 0.1f).SetEase(Ease.OutBack).SetUpdate(true);
+        canvasGroup.DOFade(0.6f, 0.1f).SetUpdate(true);
         canvasGroup.blocksRaycasts = false;
     }
 
@@ -65,19 +69,29 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
                 {
                     isPlaced = true;
                     Vector3 targetWorldPos = closestZone.GetComponent<RectTransform>().position;
-                    rectTransform.position = targetWorldPos;
+                    
+                    rectTransform.DOMove(targetWorldPos, 0.2f).SetEase(Ease.OutBack).SetUpdate(true);
+                    rectTransform.DOScale(Vector3.one, 0.15f).SetEase(Ease.OutBounce).SetUpdate(true);
+                    canvasGroup.DOFade(1f, 0.1f).SetUpdate(true);
                 }
             }
             else
             {
                 Debug.Log($"Wrong zone! Item wants {correctDropZoneIndex} but closest is {closestZone.zoneIndex}");
-                rectTransform.anchoredPosition = originalPosition;
+                
+                rectTransform.DOShakePosition(0.3f, 10f, 20, 90f).SetUpdate(true);
+                rectTransform.DOScale(Vector3.one, 0.15f).SetEase(Ease.OutBounce).SetUpdate(true);
+                canvasGroup.DOFade(1f, 0.1f).SetUpdate(true);
+                
+                rectTransform.DOAnchorPos(originalPosition, 0.4f).SetEase(Ease.OutBack).SetUpdate(true).SetDelay(0.3f);
             }
         }
         else
         {
             Debug.Log("No zone found, returning to start");
-            rectTransform.anchoredPosition = originalPosition;
+            rectTransform.DOScale(Vector3.one, 0.15f).SetEase(Ease.OutBounce).SetUpdate(true);
+            canvasGroup.DOFade(1f, 0.1f).SetUpdate(true);
+            rectTransform.DOAnchorPos(originalPosition, 0.3f).SetEase(Ease.OutBack).SetUpdate(true);
         }
     }
 
@@ -115,7 +129,9 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public void ResetItem()
     {
         isPlaced = false;
+        rectTransform.DOKill();
         rectTransform.anchoredPosition = originalPosition;
+        rectTransform.localScale = Vector3.one;
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
     }
