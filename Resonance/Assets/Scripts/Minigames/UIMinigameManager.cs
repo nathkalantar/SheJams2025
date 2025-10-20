@@ -68,8 +68,12 @@ public class UIMinigameManager : MonoBehaviour
         {
             GameObject itemObj = Instantiate(itemPrefab, itemsContainer);
             DraggableItem item = itemObj.GetComponent<DraggableItem>();
+            RectTransform itemRect = itemObj.GetComponent<RectTransform>();
+            
             itemObj.GetComponent<Image>().sprite = currentData.items[i].sprite;
-            itemObj.GetComponent<RectTransform>().anchoredPosition = currentData.items[i].startPosition;
+            itemRect.anchoredPosition = currentData.items[i].startPosition;
+            itemRect.sizeDelta = currentData.items[i].size;
+            
             item.correctDropZoneIndex = currentData.items[i].correctDropZoneIndex;
             item.originalPosition = currentData.items[i].startPosition;
             items[i] = item;

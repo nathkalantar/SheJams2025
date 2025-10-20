@@ -18,29 +18,34 @@ MonoBehaviour:
   items:
   - sprite: {fileID: 21300000, guid: 2d52a65c661be024f80b7a312c747127, type: 3}
     startPosition: {x: 3, y: 380}
+    size: {x: 500, y: 500}
     correctDropZoneIndex: 0
   - sprite: {fileID: 21300000, guid: 04416204e077291408b09c087748388c, type: 3}
     startPosition: {x: 3, y: 265}
+    size: {x: 400, y: 400}
     correctDropZoneIndex: 1
   - sprite: {fileID: 21300000, guid: f0f2aff70d0811e46a567c9d768bc6f1, type: 3}
     startPosition: {x: 3, y: -30}
+    size: {x: 530, y: 530}
     correctDropZoneIndex: 2
   - sprite: {fileID: 21300000, guid: 0f54533da9356df42957aa9773fc65e8, type: 3}
     startPosition: {x: 3, y: -265}
+    size: {x: 530, y: 530}
     correctDropZoneIndex: 3
   - sprite: {fileID: 21300000, guid: 420396532872fe64c90c5768a04b067a, type: 3}
     startPosition: {x: 3, y: -435}
+    size: {x: 500, y: 500}
     correctDropZoneIndex: 4
   dropZones:
   - position: {x: -7, y: 373}
     size: {x: 0, y: 0}
-  - position: {x: -7, y: 195}
+  - position: {x: -5, y: 155}
     size: {x: 0, y: 0}
-  - position: {x: 225, y: 211}
+  - position: {x: 225, y: 100}
     size: {x: 0, y: 0}
-  - position: {x: -220, y: 211}
+  - position: {x: -220, y: 100}
     size: {x: 0, y: 0}
-  - position: {x: -1, y: -55}
+  - position: {x: -15, y: -250}
     size: {x: 0, y: 0}
   successSound: {fileID: 0}
   failSound: {fileID: 0}
