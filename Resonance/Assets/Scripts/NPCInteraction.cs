@@ -1,13 +1,22 @@
 using UnityEngine;
+using System.Collections;
 
 public class NPCInteraction : MonoBehaviour
 {
     [SerializeField] private MinigameData minigameData;
     [SerializeField] private float interactionRange = 3f;
     [SerializeField] private KeyCode interactionKey = KeyCode.E;
+    [SerializeField] private string npcName = "NPC";
+    [SerializeField] private Sprite npcPortrait;
+    [SerializeField] private string successDialogue = "¡Gracias! Te seguiré.";
+    [SerializeField] private float followSpeed = 3f;
+    [SerializeField] private float followDistance = 2f;
     
     private Transform player;
     private bool playerInRange = false;
+    private bool isMinigameCompleted = false;
+    private bool isFollowing = false;
+    private bool showingDialogue = false;
 
     void Start()
     {
@@ -21,16 +30,35 @@ public class NPCInteraction : MonoBehaviour
         {
             Debug.LogWarning("No GameObject with 'Player' tag found!");
         }
+        
+        MinigameEventSystem.OnMinigameComplete += OnMinigameCompleted;
+    }
+    
+    void OnDestroy()
+    {
+        MinigameEventSystem.OnMinigameComplete -= OnMinigameCompleted;
     }
 
     void Update()
     {
-        CheckPlayerDistance();
-        
-        if (playerInRange && Input.GetKeyDown(interactionKey))
+        if (isFollowing)
         {
-            Debug.Log("E pressed! Starting minigame...");
-            StartMinigame();
+            FollowPlayer();
+        }
+        else if (!showingDialogue)
+        {
+            CheckPlayerDistance();
+            
+            if (playerInRange && Input.GetKeyDown(interactionKey) && !isMinigameCompleted)
+            {
+                Debug.Log("E pressed! Starting minigame...");
+                StartMinigame();
+            }
+        }
+        
+        if (showingDialogue && Input.GetKeyDown(interactionKey))
+        {
+            HideDialogue();
         }
     }
 
@@ -62,9 +90,68 @@ public class NPCInteraction : MonoBehaviour
         }
     }
 
+    void OnMinigameCompleted(MinigameData completedData, bool success)
+    {
+        if (success && completedData == minigameData)
+        {
+            isMinigameCompleted = true;
+            StartCoroutine(ShowSuccessDialogue());
+        }
+    }
+    
+    System.Collections.IEnumerator ShowSuccessDialogue()
+    {
+        yield return new WaitForSeconds(0.5f);
+        showingDialogue = true;
+        
+        if (DialogueUI.Instance != null)
+        {
+            DialogueUI.Instance.ShowDialogue(npcName, successDialogue, npcPortrait);
+        }
+        else
+        {
+            Debug.Log($"{npcName}: {successDialogue}");
+            Debug.Log("Press E to continue...");
+        }
+    }
+    
+    void HideDialogue()
+    {
+        showingDialogue = false;
+        isFollowing = true;
+        
+        if (DialogueUI.Instance != null)
+        {
+            DialogueUI.Instance.HideDialogue();
+        }
+        
+        Debug.Log("NPC started following!");
+    }
+    
+    void FollowPlayer()
+    {
+        if (player == null) return;
+        
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        
+        if (distanceToPlayer > followDistance)
+        {
+            Vector3 direction = (player.position - transform.position).normalized;
+            Vector3 targetPosition = player.position - direction * followDistance;
+            
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, followSpeed * Time.deltaTime);
+        }
+    }
+    
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, interactionRange);
+        
+        if (isFollowing)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(transform.position, followDistance);
+        }
     }
 }
