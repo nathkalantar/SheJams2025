@@ -11,15 +11,9 @@ public class NPCInteraction : MonoBehaviour
     [SerializeField] private string successDialogue = "¡Gracias! Te seguiré.";
     [SerializeField] private float followSpeed = 3f;
     [SerializeField] private float followDistance = 2f;
-    
-    [Header("Color Sphere")]
-    [SerializeField] private GameObject colorSpherePrefab;
-    [SerializeField] private float targetSphereRadius = 4f;
-    [SerializeField] private float sphereGrowSpeed = 2f;
+    [SerializeField] private GameObject interactionIndicator;
     
     private Transform player;
-    private GameObject spawnedColorSphere;
-    private ColorSphere colorSphereComponent;
     private bool playerInRange = false;
     private bool isMinigameCompleted = false;
     private bool isFollowing = false;
@@ -38,27 +32,8 @@ public class NPCInteraction : MonoBehaviour
             Debug.LogWarning("No GameObject with 'Player' tag found!");
         }
         
-        // Spawnear el prefab de ColorSphere con radio 0 (sin parent para que se quede fijo)
-        if (colorSpherePrefab != null)
-        {
-            spawnedColorSphere = Instantiate(colorSpherePrefab, transform.position, Quaternion.identity);
-            colorSphereComponent = spawnedColorSphere.GetComponent<ColorSphere>();
-            
-            if (colorSphereComponent != null)
-            {
-                colorSphereComponent.radius = 0f;
-                colorSphereComponent.SetRadius(0f);
-                colorSphereComponent.animateRadius = false;
-            }
-            else
-            {
-                Debug.LogWarning("ColorSphere component not found on prefab!");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("ColorSpherePrefab is not assigned!");
-        }
+        if (interactionIndicator != null)
+            interactionIndicator.SetActive(false);
         
         MinigameEventSystem.OnMinigameComplete += OnMinigameCompleted;
     }
@@ -102,7 +77,20 @@ public class NPCInteraction : MonoBehaviour
             if (playerInRange != wasInRange)
             {
                 Debug.Log($"Player in range: {playerInRange}, Distance: {distance:F2}");
+                UpdateInteractionIndicator();
             }
+        }
+    }
+    
+    void UpdateInteractionIndicator()
+    {
+        if (interactionIndicator != null && !isMinigameCompleted)
+        {
+            interactionIndicator.SetActive(playerInRange);
+        }
+        else if (interactionIndicator != null && isMinigameCompleted)
+        {
+            interactionIndicator.SetActive(false);
         }
     }
 
@@ -142,12 +130,6 @@ public class NPCInteraction : MonoBehaviour
             Debug.Log($"{npcName}: {successDialogue}");
             Debug.Log("Press E to continue...");
         }
-        
-        // Expandir la esfera y activar animación
-        if (colorSphereComponent != null)
-        {
-            StartCoroutine(GrowColorSphere());
-        }
     }
     
     void HideDialogue()
@@ -163,43 +145,51 @@ public class NPCInteraction : MonoBehaviour
         Debug.Log("NPC started following!");
     }
     
-    System.Collections.IEnumerator GrowColorSphere()
-    {
-        if (colorSphereComponent == null) yield break;
-        
-        float currentRadius = 0f;
-        
-        while (currentRadius < targetSphereRadius)
-        {
-            currentRadius += sphereGrowSpeed * Time.deltaTime;
-            currentRadius = Mathf.Min(currentRadius, targetSphereRadius);
-            
-            colorSphereComponent.SetRadius(currentRadius);
-            
-            yield return null;
-        }
-        
-        // Activar animación cuando alcance el tamaño objetivo
-        colorSphereComponent.animateRadius = true;
-        colorSphereComponent.minRadius = targetSphereRadius * 0.8f;
-        colorSphereComponent.maxRadius = targetSphereRadius * 1.2f;
-        
-        Debug.Log("ColorSphere reached target radius and animation activated!");
-    }
-    
     void FollowPlayer()
     {
         if (player == null) return;
         
+        float npcColliderRadius = GetColliderRadius();
+        float playerColliderRadius = GetPlayerColliderRadius();
+        float safeDistance = followDistance + npcColliderRadius + playerColliderRadius + 0.5f;
+        
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         
-        if (distanceToPlayer > followDistance)
+        if (distanceToPlayer > safeDistance)
         {
             Vector3 direction = (player.position - transform.position).normalized;
-            Vector3 targetPosition = player.position - direction * followDistance;
+            Vector3 targetPosition = player.position - direction * safeDistance;
             
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, followSpeed * Time.deltaTime);
+            float remainingDistance = Vector3.Distance(transform.position, targetPosition);
+            float moveStep = followSpeed * Time.deltaTime;
+            
+            if (remainingDistance > 0.1f)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveStep);
+            }
         }
+    }
+    
+    float GetColliderRadius()
+    {
+        Collider col = GetComponent<Collider>();
+        if (col != null)
+        {
+            return Mathf.Max(col.bounds.size.x, col.bounds.size.z) * 0.5f;
+        }
+        return 0.5f;
+    }
+    
+    float GetPlayerColliderRadius()
+    {
+        if (player == null) return 0.5f;
+        
+        Collider playerCol = player.GetComponent<Collider>();
+        if (playerCol != null)
+        {
+            return Mathf.Max(playerCol.bounds.size.x, playerCol.bounds.size.z) * 0.5f;
+        }
+        return 0.5f;
     }
     
     void OnDrawGizmosSelected()
@@ -207,10 +197,23 @@ public class NPCInteraction : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, interactionRange);
         
-        if (isFollowing)
+        if (isFollowing && player != null)
         {
+            float npcColliderRadius = GetColliderRadius();
+            float playerColliderRadius = GetPlayerColliderRadius();
+            float safeDistance = followDistance + npcColliderRadius + playerColliderRadius + 0.5f;
+            
             Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(transform.position, followDistance);
+            Gizmos.DrawWireSphere(transform.position, safeDistance);
+            
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, npcColliderRadius);
+            
+            if (player != null)
+            {
+                Gizmos.color = Color.blue;
+                Gizmos.DrawWireSphere(player.position, playerColliderRadius);
+            }
         }
     }
 }
