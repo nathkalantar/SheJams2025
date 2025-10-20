@@ -13,7 +13,14 @@ public class NPCInteraction : MonoBehaviour
     [SerializeField] private float followDistance = 2f;
     [SerializeField] private GameObject interactionIndicator;
     
+    [Header("Color Sphere")]
+    [SerializeField] private GameObject colorSpherePrefab;
+    [SerializeField] private float targetSphereRadius = 4f;
+    [SerializeField] private float sphereGrowSpeed = 2f;
+    
     private Transform player;
+    private GameObject spawnedColorSphere;
+    private ColorSphere colorSphereComponent;
     private bool playerInRange = false;
     private bool isMinigameCompleted = false;
     private bool isFollowing = false;
@@ -34,6 +41,28 @@ public class NPCInteraction : MonoBehaviour
         
         if (interactionIndicator != null)
             interactionIndicator.SetActive(false);
+        
+        // Spawnear el prefab de ColorSphere con radio 0 (sin parent para que se quede fijo)
+        if (colorSpherePrefab != null)
+        {
+            spawnedColorSphere = Instantiate(colorSpherePrefab, transform.position, Quaternion.identity);
+            colorSphereComponent = spawnedColorSphere.GetComponent<ColorSphere>();
+            
+            if (colorSphereComponent != null)
+            {
+                colorSphereComponent.radius = 0f;
+                colorSphereComponent.SetRadius(0f);
+                colorSphereComponent.animateRadius = false;
+            }
+            else
+            {
+                Debug.LogWarning("ColorSphere component not found on prefab!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("ColorSpherePrefab is not assigned!");
+        }
         
         MinigameEventSystem.OnMinigameComplete += OnMinigameCompleted;
     }
@@ -130,6 +159,12 @@ public class NPCInteraction : MonoBehaviour
             Debug.Log($"{npcName}: {successDialogue}");
             Debug.Log("Press E to continue...");
         }
+        
+        // Expandir la esfera y activar animación
+        if (colorSphereComponent != null)
+        {
+            StartCoroutine(GrowColorSphere());
+        }
     }
     
     void HideDialogue()
@@ -143,6 +178,30 @@ public class NPCInteraction : MonoBehaviour
         }
         
         Debug.Log("NPC started following!");
+    }
+    
+    System.Collections.IEnumerator GrowColorSphere()
+    {
+        if (colorSphereComponent == null) yield break;
+        
+        float currentRadius = 0f;
+        
+        while (currentRadius < targetSphereRadius)
+        {
+            currentRadius += sphereGrowSpeed * Time.deltaTime;
+            currentRadius = Mathf.Min(currentRadius, targetSphereRadius);
+            
+            colorSphereComponent.SetRadius(currentRadius);
+            
+            yield return null;
+        }
+        
+        // Activar animación cuando alcance el tamaño objetivo
+        colorSphereComponent.animateRadius = true;
+        colorSphereComponent.minRadius = targetSphereRadius * 0.8f;
+        colorSphereComponent.maxRadius = targetSphereRadius * 1.2f;
+        
+        Debug.Log("ColorSphere reached target radius and animation activated!");
     }
     
     void FollowPlayer()
