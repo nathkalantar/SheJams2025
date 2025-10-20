@@ -88,8 +88,7 @@ public class UIMinigameManager : MonoBehaviour
             
             rt.anchoredPosition = currentData.dropZones[i].position;
             rt.sizeDelta = currentData.dropZones[i].size;
-            if (currentData.dropZones[i].backgroundSprite)
-                img.sprite = currentData.dropZones[i].backgroundSprite;
+            img.color = Color.clear;
             zone.zoneIndex = i;
             dropZones[i] = zone;
         }

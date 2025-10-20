@@ -16,7 +16,6 @@ public class MinigameData : ScriptableObject
     {
         public Vector2 position;
         public Vector2 size;
-        public Sprite backgroundSprite;
     }
 
     public string minigameName;

@@ -5,17 +5,9 @@ public class DropZone : MonoBehaviour
 {
     [HideInInspector] public int zoneIndex;
     [HideInInspector] public bool hasItem = false;
+    [SerializeField] private bool showDebugGizmos = true;
+    [SerializeField] private Color debugColor = Color.red;
     
-    private Image image;
-    private Color originalColor;
-
-    void Awake()
-    {
-        image = GetComponent<Image>();
-        if (image != null)
-            originalColor = image.color;
-    }
-
     public bool AcceptItem(DraggableItem item)
     {
         if (hasItem) return false;
@@ -24,14 +16,7 @@ public class DropZone : MonoBehaviour
         if (isCorrect)
         {
             hasItem = true;
-            if (image != null)
-                image.color = Color.green;
-            
             UIMinigameManager.Instance.CheckCompletion();
-        }
-        else
-        {
-            StartCoroutine(ShowIncorrectFeedback());
         }
         
         return isCorrect;
@@ -40,17 +25,30 @@ public class DropZone : MonoBehaviour
     public void ResetZone()
     {
         hasItem = false;
-        if (image != null)
-            image.color = originalColor;
     }
 
-    System.Collections.IEnumerator ShowIncorrectFeedback()
+    void OnDrawGizmos()
     {
-        if (image != null)
-        {
-            image.color = Color.red;
-            yield return new WaitForSeconds(0.5f);
-            image.color = originalColor;
-        }
+        if (!showDebugGizmos) return;
+
+        RectTransform rectTransform = GetComponent<RectTransform>();
+        if (rectTransform == null) return;
+
+        Gizmos.color = debugColor;
+        
+        Vector3 worldPos = rectTransform.position;
+        Vector2 size = rectTransform.sizeDelta;
+        Vector3 scale = rectTransform.lossyScale;
+        
+        Vector3 scaledSize = new Vector3(size.x * scale.x, size.y * scale.y, 1f);
+        
+        Gizmos.DrawWireCube(worldPos, scaledSize);
+        
+        Gizmos.color = new Color(debugColor.r, debugColor.g, debugColor.b, 0.2f);
+        Gizmos.DrawCube(worldPos, scaledSize);
+
+#if UNITY_EDITOR
+        UnityEditor.Handles.Label(worldPos + Vector3.up * (scaledSize.y * 0.6f), $"Zone {zoneIndex}");
+#endif
     }
 }

@@ -6,6 +6,9 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 {
     [HideInInspector] public int correctDropZoneIndex;
     [HideInInspector] public Vector2 originalPosition;
+    [SerializeField] private float snapDistance = 100f;
+    [SerializeField] private bool showDebugGizmos = true;
+    [SerializeField] private Color debugColor = Color.blue;
     
     private Canvas canvas;
     private CanvasGroup canvasGroup;
@@ -26,6 +29,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (isPlaced) return;
+        Debug.Log("Begin drag started");
         canvasGroup.alpha = 0.6f;
         canvasGroup.blocksRaycasts = false;
     }
@@ -33,7 +37,9 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public void OnDrag(PointerEventData eventData)
     {
         if (isPlaced) return;
-        rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        Vector2 newPosition = rectTransform.anchoredPosition + (eventData.delta / canvas.scaleFactor);
+        rectTransform.anchoredPosition = newPosition;
+        Debug.Log($"Dragging to: {newPosition}");
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -42,16 +48,68 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
         
-        DropZone dropZone = eventData.pointerEnter?.GetComponent<DropZone>();
-        if (dropZone != null && dropZone.AcceptItem(this))
+        Debug.Log($"Item dropped at anchored position: {rectTransform.anchoredPosition}, world position: {rectTransform.position}");
+        
+        DropZone closestZone = FindNearestValidDropZone();
+        
+        if (closestZone != null)
         {
-            isPlaced = true;
-            rectTransform.anchoredPosition = dropZone.GetComponent<RectTransform>().anchoredPosition;
+            Debug.Log($"Found closest zone {closestZone.zoneIndex} at distance");
+            
+            Debug.Log($"Item expects zone {correctDropZoneIndex}, found zone {closestZone.zoneIndex}");
+            
+            if (closestZone.zoneIndex == correctDropZoneIndex)
+            {
+                Debug.Log("Correct zone! Snapping...");
+                if (closestZone.AcceptItem(this))
+                {
+                    isPlaced = true;
+                    Vector3 targetWorldPos = closestZone.GetComponent<RectTransform>().position;
+                    rectTransform.position = targetWorldPos;
+                }
+            }
+            else
+            {
+                Debug.Log($"Wrong zone! Item wants {correctDropZoneIndex} but closest is {closestZone.zoneIndex}");
+                rectTransform.anchoredPosition = originalPosition;
+            }
         }
         else
         {
+            Debug.Log("No zone found, returning to start");
             rectTransform.anchoredPosition = originalPosition;
         }
+    }
+
+    DropZone FindNearestValidDropZone()
+    {
+        DropZone[] allZones = FindObjectsOfType<DropZone>();
+        Debug.Log($"Found {allZones.Length} zones total");
+        
+        DropZone nearestZone = null;
+        float minDistance = float.MaxValue;
+        
+        Vector3 itemWorldPos = rectTransform.position;
+        Debug.Log($"Item world position: {itemWorldPos}");
+
+        foreach (DropZone zone in allZones)
+        {
+            if (zone.hasItem) continue;
+
+            Vector3 zoneWorldPos = zone.GetComponent<RectTransform>().position;
+            float distance = Vector2.Distance(itemWorldPos, zoneWorldPos);
+            
+            Debug.Log($"Zone {zone.zoneIndex}: world position {zoneWorldPos}, distance {distance:F1}, snapDistance {snapDistance}");
+
+            if (distance < snapDistance && distance < minDistance)
+            {
+                minDistance = distance;
+                nearestZone = zone;
+            }
+        }
+
+        Debug.Log($"Closest zone: {(nearestZone != null ? nearestZone.zoneIndex.ToString() : "none")}, distance: {minDistance:F1}");
+        return nearestZone;
     }
 
     public void ResetItem()
@@ -60,5 +118,33 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         rectTransform.anchoredPosition = originalPosition;
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (!showDebugGizmos) return;
+
+        RectTransform rectTransform = GetComponent<RectTransform>();
+        if (rectTransform == null) return;
+
+        Gizmos.color = debugColor;
+        
+        Vector3 worldPos = rectTransform.position;
+        Vector2 size = rectTransform.sizeDelta;
+        Vector3 scale = rectTransform.lossyScale;
+        
+        Vector3 scaledSize = new Vector3(size.x * scale.x, size.y * scale.y, 1f);
+        
+        Gizmos.DrawWireCube(worldPos, scaledSize);
+        
+        Gizmos.color = new Color(debugColor.r, debugColor.g, debugColor.b, 0.1f);
+        Gizmos.DrawCube(worldPos, scaledSize);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(worldPos, snapDistance * scale.x);
+
+#if UNITY_EDITOR
+        UnityEditor.Handles.Label(worldPos + Vector3.up * (scaledSize.y * 0.6f), $"Item→{correctDropZoneIndex}");
+#endif
     }
 }

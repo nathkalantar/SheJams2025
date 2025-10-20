@@ -4,27 +4,47 @@ public class NPCInteraction : MonoBehaviour
 {
     [SerializeField] private MinigameData minigameData;
     [SerializeField] private float interactionRange = 3f;
+    [SerializeField] private KeyCode interactionKey = KeyCode.E;
     
     private Transform player;
-    private bool canInteract = false;
+    private bool playerInRange = false;
 
     void Start()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
+        {
             player = playerObj.transform;
+            Debug.Log("Player found: " + playerObj.name);
+        }
+        else
+        {
+            Debug.LogWarning("No GameObject with 'Player' tag found!");
+        }
     }
 
     void Update()
     {
+        CheckPlayerDistance();
+        
+        if (playerInRange && Input.GetKeyDown(interactionKey))
+        {
+            Debug.Log("E pressed! Starting minigame...");
+            StartMinigame();
+        }
+    }
+
+    void CheckPlayerDistance()
+    {
         if (player != null)
         {
             float distance = Vector3.Distance(transform.position, player.position);
-            canInteract = distance <= interactionRange;
+            bool wasInRange = playerInRange;
+            playerInRange = distance <= interactionRange;
             
-            if (canInteract && Input.GetKeyDown(KeyCode.E))
+            if (playerInRange != wasInRange)
             {
-                StartMinigame();
+                Debug.Log($"Player in range: {playerInRange}, Distance: {distance:F2}");
             }
         }
     }
@@ -33,7 +53,12 @@ public class NPCInteraction : MonoBehaviour
     {
         if (minigameData != null)
         {
+            Debug.Log("Starting minigame: " + minigameData.minigameName);
             MinigameEventSystem.StartMinigame(minigameData);
+        }
+        else
+        {
+            Debug.LogWarning("MinigameData is null!");
         }
     }
 
