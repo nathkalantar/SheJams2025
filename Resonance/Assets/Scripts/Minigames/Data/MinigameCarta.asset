@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a592704ebc1e66141a8145fa14ce9c03, type: 3}
+  m_Name: MinigameCarta
+  m_EditorClassIdentifier: 
+  minigameName: Carta
+  backgroundSprite: {fileID: 21300000, guid: 789da816bcd46104d82f0ec0f1d0a5ec, type: 3}
+  backgroundColor: {r: 1, g: 1, b: 1, a: 1}
+  items:
+  - sprite: {fileID: 21300000, guid: 64433825b7015c04ba0a22c3a95a6f8a, type: 3}
+    startPosition: {x: 3, y: -30}
+    size: {x: 200, y: 200}
+    correctDropZoneIndex: 0
+  - sprite: {fileID: 21300000, guid: d3331235164b0e54bb944cabfc207e6d, type: 3}
+    startPosition: {x: 3, y: -265}
+    size: {x: 200, y: 200}
+    correctDropZoneIndex: 1
+  - sprite: {fileID: 21300000, guid: 3bb9c2a00c9544f46ac89302bc258ada, type: 3}
+    startPosition: {x: 3, y: 265}
+    size: {x: 200, y: 200}
+    correctDropZoneIndex: 2
+  - sprite: {fileID: 21300000, guid: 7599d640135b2fc478a70063ac9057eb, type: 3}
+    startPosition: {x: 3, y: 380}
+    size: {x: 200, y: 200}
+    correctDropZoneIndex: 3
+  dropZones:
+  - position: {x: -96, y: 234}
+    size: {x: 200, y: 200}
+  - position: {x: -273, y: 99}
+    size: {x: 200, y: 200}
+  - position: {x: -353, y: -100}
+    size: {x: 200, y: 200}
+  - position: {x: 341, y: -291}
+    size: {x: 200, y: 200}
+  successSound: {fileID: 0}
+  failSound: {fileID: 0}
