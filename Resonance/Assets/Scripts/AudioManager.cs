@@ -20,7 +20,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlaySound(int index, float delay = 0f)
     {
-        audioS.clip = pistas_Sfx[index];
+       audioS.clip = pistas_Sfx[index];
         audioS.loop = false;
         if (delay == 0f)
             audioS.Play();
