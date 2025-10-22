@@ -8,44 +8,38 @@ public class TowerTrigger : MonoBehaviour
     [Header("Tower Settings")]
     [SerializeField] private string nextSceneName = "VideoEnd";
     [SerializeField] private float waitTime = 2f;
+    [SerializeField] private float desaturationFadeDuration = 2f; // Duración del fade del filtro
     
     [Header("Audio/Visual Feedback")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip triggerSound;
-    [SerializeField] private GameObject colorSpherePrefab;
-    [SerializeField] private float targetSphereRadius = 100f;
-    [SerializeField] private float sphereGrowSpeed = 50f;
     
     private bool isTriggered = false;
+    private bool hasShownWarning = false; // Para evitar múltiples warnings
+    private bool hasActivatedSphere = false; // Para activar la esfera solo una vez
+    private bool sphereInitializationComplete = false; // Para saber cuándo mostrar el popup
+    private bool playerInTrigger = false; // Para saber si el jugador está en el trigger
     private List<NPCInteraction> allNPCs = new List<NPCInteraction>();
-    private GameObject spawnedColorSphere;
-    private ColorSphere colorSphereComponent;
+    private ScreenDesaturationEffect desaturationEffect;
 
     private void Start()
     {
         // Encontrar todos los NPCs en la escena
         FindAllNPCs();
         
-        // Spawnear el ColorSphere con radio 0
-        if (colorSpherePrefab != null)
+        // Buscar el componente ScreenDesaturationEffect en la cámara
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null)
         {
-            spawnedColorSphere = Instantiate(colorSpherePrefab, transform.position, Quaternion.identity);
-            colorSphereComponent = spawnedColorSphere.GetComponent<ColorSphere>();
-            
-            if (colorSphereComponent != null)
+            desaturationEffect = mainCamera.GetComponent<ScreenDesaturationEffect>();
+            if (desaturationEffect == null)
             {
-                colorSphereComponent.radius = 0f;
-                colorSphereComponent.SetRadius(0f);
-                colorSphereComponent.animateRadius = false;
-            }
-            else
-            {
-                Debug.LogWarning("ColorSphere component not found on prefab!");
+                Debug.LogWarning("ScreenDesaturationEffect not found on main camera!");
             }
         }
         else
         {
-            Debug.LogWarning("ColorSphere prefab is not assigned!");
+            Debug.LogWarning("Main camera not found!");
         }
     }
 
@@ -59,18 +53,38 @@ public class TowerTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && !isTriggered)
+        if (other.CompareTag("Player"))
         {
-            if (AreAllNPCsFollowing())
+            playerInTrigger = true;
+            
+            // Primera vez que entra con todos los NPCs: activar la esfera
+            if (AreAllNPCsFollowing() && !hasActivatedSphere)
             {
-                isTriggered = true;
-                StartCoroutine(ActivateTower());
+                hasActivatedSphere = true;
+                StartCoroutine(ActivateSphereAndDesaturation());
             }
-            else
+            
+            // Si ya completó la inicialización de la esfera y no está triggeado, mostrar confirmación
+            if (sphereInitializationComplete && !isTriggered)
             {
-                Debug.Log("Not all NPCs are following yet!");
-                ShowFeedback("Complete all tasks first!");
+                ShowConfirmationDialog();
             }
+            // Si no tiene todos los NPCs, mostrar warning
+            else if (!AreAllNPCsFollowing() && !hasShownWarning)
+            {
+                ShowWarningMessage();
+                hasShownWarning = true;
+            }
+        }
+    }
+    
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            playerInTrigger = false;
+            // Reset warning flag cuando el jugador sale del trigger
+            hasShownWarning = false;
         }
     }
 
@@ -103,9 +117,122 @@ public class TowerTrigger : MonoBehaviour
         return npc.IsFollowing;
     }
 
-    private IEnumerator ActivateTower()
+    private IEnumerator FadeOutDesaturation()
     {
-        Debug.Log("Tower activated! All NPCs are following the player.");
+        if (desaturationEffect == null) yield break;
+        
+        Debug.Log("Starting desaturation fade-out...");
+        
+        float elapsed = 0f;
+        float startDesaturation = desaturationEffect.globalDesaturation;
+        
+        while (elapsed < desaturationFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / desaturationFadeDuration;
+            
+            // Interpolar de la desaturación actual a 0 (color completo)
+            float currentDesaturation = Mathf.Lerp(startDesaturation, 0f, progress);
+            desaturationEffect.globalDesaturation = currentDesaturation;
+            
+            yield return null;
+        }
+        
+        // Asegurar que llegue a 0 (color completo)
+        desaturationEffect.globalDesaturation = 0f;
+        
+        Debug.Log("Desaturation fade-out complete! World restored to full color.");
+    }
+
+    private void ShowWarningMessage()
+    {
+        // Calcular cuántos NPCs faltan
+        int followingCount = 0;
+        foreach (var npc in allNPCs)
+        {
+            if (npc != null && IsNPCFollowing(npc))
+                followingCount++;
+        }
+        
+        int remaining = allNPCs.Count - followingCount;
+        
+        string message = remaining == 1 
+            ? "Complete 1 more task before accessing the tower!" 
+            : $"Complete {remaining} more tasks before accessing the tower!";
+        
+        // Mostrar mensaje usando TowerUI
+        if (TowerUI.Instance != null)
+        {
+            TowerUI.Instance.ShowWarningMessage(message);
+        }
+        else
+        {
+            Debug.LogWarning("TowerUI instance not found! Make sure TowerUI is in the scene.");
+            Debug.Log(message);
+        }
+    }
+    
+    private void ShowConfirmationDialog()
+    {
+        string message = "Ready to proceed to the final sequence?";
+        
+        if (TowerUI.Instance != null)
+        {
+            TowerUI.Instance.ShowConfirmationDialog(
+                message,
+                OnConfirmProceed,    // On confirm
+                OnCancelProceed      // On cancel
+            );
+        }
+        else
+        {
+            Debug.LogWarning("TowerUI instance not found! Proceeding automatically.");
+            OnConfirmProceed();
+        }
+    }
+    
+    private void OnConfirmProceed()
+    {
+        if (!isTriggered)
+        {
+            isTriggered = true;
+            StartCoroutine(HandleConfirmProceed());
+        }
+    }
+    
+    private IEnumerator HandleConfirmProceed()
+    {
+        // ===== ESPACIO PARA FUTURAS FUNCIONALIDADES =====
+        // Aquí se pueden añadir efectos adicionales, animaciones, 
+        // sonidos especiales, guardado de datos, etc.
+        
+        // Por ejemplo:
+        // - Efectos visuales especiales
+        // - Guardado del progreso
+        // - Animaciones de transición
+        // - Música/sonidos finales
+        
+        Debug.Log("Preparing final sequence...");
+        
+        // ===== FIN DEL ESPACIO PARA FUTURAS FUNCIONALIDADES =====
+        
+        // Esperar 1 segundo antes de cambiar a la escena del video
+        yield return new WaitForSeconds(1f);
+        
+        // Proceder con el video final
+        StartCoroutine(GoToFinalVideo());
+    }
+    
+    private void OnCancelProceed()
+    {
+        Debug.Log("Player chose not to proceed to final sequence yet.");
+        // El jugador puede salir y volver a entrar si cambia de opinión
+    }
+    
+    // Nuevo método: activar esfera y quitar desaturación (primera vez)
+    private IEnumerator ActivateSphereAndDesaturation()
+    {
+        Debug.Log("Tower accessed for the first time! Activating color restoration...");
         
         // Efectos audio
         if (audioSource != null && triggerSound != null)
@@ -113,56 +240,47 @@ public class TowerTrigger : MonoBehaviour
             audioSource.PlayOneShot(triggerSound);
         }
         
-        // Expandir la ColorSphere
-        if (colorSphereComponent != null)
+        // Quitar gradualmente el filtro de desaturación
+        if (desaturationEffect != null)
         {
-            StartCoroutine(GrowColorSphere());
+            yield return StartCoroutine(FadeOutDesaturation());
         }
         
-        // Mostrar mensaje al jugador
-        ShowFeedback("Tower activated! Proceeding to next area...");
+        // Esperar 2 segundos a que la esfera se haya iniciado completamente
+        Debug.Log("Waiting for sphere initialization...");
+        yield return new WaitForSeconds(2f);
         
-        // Esperar el tiempo configurado
+        // Marcar la inicialización como completa
+        sphereInitializationComplete = true;
+        
+        Debug.Log("Color restoration complete! You can now proceed to the final sequence.");
+        
+        // Si el jugador todavía está en el trigger, mostrar el popup inmediatamente
+        if (playerInTrigger && !isTriggered)
+        {
+            ShowConfirmationDialog();
+        }
+    }
+    
+    // Método separado: ir al video final
+    private IEnumerator GoToFinalVideo()
+    {
+        Debug.Log("Proceeding to final video sequence...");
+        
+        // Mostrar mensaje al jugador
+        ShowFeedback("Loading final sequence...");
+        
+        // Esperar un momento antes de cargar
         yield return new WaitForSeconds(waitTime);
         
         // Cargar la siguiente escena
         LoadNextScene();
     }
     
-    private IEnumerator GrowColorSphere()
-    {
-        if (colorSphereComponent == null) yield break;
-        
-        float currentRadius = 0f;
-        
-        while (currentRadius < targetSphereRadius)
-        {
-            currentRadius += sphereGrowSpeed * Time.deltaTime;
-            currentRadius = Mathf.Min(currentRadius, targetSphereRadius);
-            
-            colorSphereComponent.SetRadius(currentRadius);
-            
-            yield return null;
-        }
-        
-        // Activar animación cuando alcance el tamaño objetivo
-        colorSphereComponent.animateRadius = true;
-        colorSphereComponent.minRadius = targetSphereRadius * 0.9f;
-        colorSphereComponent.maxRadius = targetSphereRadius * 1.1f;
-        
-        Debug.Log("Tower ColorSphere reached target radius and animation activated!");
-    }
-
     private void ShowFeedback(string message)
     {
-        // Aquí puedes integrar con tu sistema de UI/diálogos
+        // Método legacy - ahora usamos TowerUI
         Debug.Log(message);
-        
-        // Si tienes un sistema de diálogos, úsalo aquí:
-        // if (DialogueUI.Instance != null)
-        // {
-        //     DialogueUI.Instance.ShowSimpleMessage(message);
-        // }
     }
 
     private void LoadNextScene()

@@ -18,6 +18,11 @@ Shader "Custom/MagicalTransformation"
         _TransformColor ("Transform To Color", Color) = (1, 1, 1, 1)
         _EmissionIntensity ("Emission Intensity", Range(0, 3)) = 1
         
+        [Header(Sphere Masking)]
+        _SphereCenter ("Sphere Center (World)", Vector) = (0, 0, 0, 0)
+        _SphereRadius ("Sphere Radius", Float) = 5.0
+        _SphereFadeEdge ("Sphere Fade Edge", Range(0, 2)) = 0.5
+        
         [Header(Sprite Settings)]
         [Toggle(PIXELSNAP_ON)] _PixelSnap ("Pixel snap", Float) = 0
         [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
@@ -82,6 +87,9 @@ Shader "Custom/MagicalTransformation"
             float _WaveFrequency;
             fixed4 _TransformColor;
             float _EmissionIntensity;
+            float4 _SphereCenter;
+            float _SphereRadius;
+            float _SphereFadeEdge;
 
             v2f vert(appdata_t IN)
             {
@@ -139,8 +147,16 @@ Shader "Custom/MagicalTransformation"
                 // Obtener color del sprite
                 fixed4 c = SampleSpriteTexture(IN.texcoord) * IN.color;
                 
-                // Solo aplicar efectos donde hay píxeles del sprite (alpha > 0)
-                if (c.a > 0.01)
+                // Calcular distancia desde el centro de la esfera
+                float3 worldPos = IN.worldPos.xyz;
+                float distanceToSphere = distance(worldPos, _SphereCenter.xyz);
+                
+                // Crear máscara de la esfera con fade suave en los bordes
+                float sphereMask = 1.0 - smoothstep(_SphereRadius - _SphereFadeEdge, _SphereRadius + _SphereFadeEdge, distanceToSphere);
+                sphereMask = saturate(sphereMask);
+                
+                // Solo aplicar efectos donde hay píxeles del sprite (alpha > 0) Y dentro de la esfera
+                if (c.a > 0.01 && sphereMask > 0.01)
                 {
                     // Efecto de chispas/sparkles
                     float2 sparkleUV = IN.texcoord * _SparkleFrequency;
@@ -163,19 +179,22 @@ Shader "Custom/MagicalTransformation"
                     // Color final interpolado entre original y transformado
                     fixed4 finalColor = lerp(c, _TransformColor * c.a, _TransformationProgress * 0.6);
                     
-                    // Agregar efectos mágicos
-                    fixed4 magicEffect = _MagicColor * (magicGlow + energyWave);
+                    // Agregar efectos mágicos (multiplicados por la máscara de la esfera)
+                    fixed4 magicEffect = _MagicColor * (magicGlow + energyWave) * sphereMask;
                     finalColor.rgb += magicEffect.rgb * _TransformationProgress * c.a;
                     
-                    // Emission final
-                    finalColor.rgb += finalColor.rgb * _EmissionIntensity * _TransformationProgress;
+                    // Emission final (también limitado por la esfera)
+                    finalColor.rgb += finalColor.rgb * _EmissionIntensity * _TransformationProgress * sphereMask;
                     
-                    // Pulso de luz al final de la transformación
+                    // Pulso de luz al final de la transformación (solo en la esfera)
                     if (_TransformationProgress > 0.9)
                     {
                         float finalBurst = sin(_Time.y * 25) * 0.3 + 0.3;
-                        finalColor.rgb += _MagicColor.rgb * finalBurst * (_TransformationProgress - 0.9) * 20;
+                        finalColor.rgb += _MagicColor.rgb * finalBurst * (_TransformationProgress - 0.9) * 20 * sphereMask;
                     }
+                    
+                    // Interpolar entre sprite original y transformado basado en la máscara de la esfera
+                    finalColor = lerp(c, finalColor, sphereMask * _TransformationProgress);
                     
                     // Mantener el alpha original del sprite
                     finalColor.a = c.a;

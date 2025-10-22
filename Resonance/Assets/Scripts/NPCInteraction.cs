@@ -193,15 +193,34 @@ public class NPCInteraction : MonoBehaviour
             Debug.Log("Victory sound played!");
         }
         
-        // 2. Activar efecto de transformación visual (partículas, etc.)
+        // 2. Hacer aparecer y crecer la ColorSphere ANTES de la transformación
+        if (colorSphereComponent != null)
+        {
+            Debug.Log("Starting ColorSphere growth before transformation...");
+            StartCoroutine(GrowColorSphere());
+            yield return new WaitForSeconds(1f); // Dar tiempo para que empiece a crecer
+        }
+        
+        // 3. Activar efecto de transformación visual (partículas, etc.)
         GameObject activeTransformationEffect = null;
         if (transformationEffect != null)
         {
             activeTransformationEffect = Instantiate(transformationEffect, transform.position, transform.rotation, transform);
-            Debug.Log("Transformation effect spawned!");
+            Debug.Log($"Transformation effect spawned at position: {transform.position}");
+            
+            // Las partículas ahora están configuradas para durar exactamente 2 segundos
+            // No necesitamos fade manual - se configuran en el ParticleSystem con:
+            // - Duration: 2.0
+            // - Start Lifetime: 1.5-2.0  
+            // - Looping: Desactivado
+            // - Color over Lifetime: Gradiente de opaco a transparente (opcional)
+        }
+        else
+        {
+            Debug.LogWarning("No transformation effect prefab assigned!");
         }
         
-        // 3. Iniciar shader de transformación mágica
+        // 4. Iniciar shader de transformación mágica
         if (npcRenderer != null && transformationMaterial != null)
         {
             // Crear una instancia del material para este NPC
@@ -212,40 +231,97 @@ public class NPCInteraction : MonoBehaviour
             if (spriteRenderer != null && spriteRenderer.sprite != null)
             {
                 instanceMaterial.SetTexture("_MainTex", spriteRenderer.sprite.texture);
+                Debug.Log("Sprite texture assigned to material");
             }
             
-            // Configurar colores personalizados
+            // Configurar colores personalizados para el shader
             if (instanceMaterial.HasProperty("_MagicColor"))
+            {
                 instanceMaterial.SetColor("_MagicColor", magicColor);
+                Debug.Log($"Magic color set: {magicColor}");
+            }
+            
             if (instanceMaterial.HasProperty("_TransformColor"))
+            {
                 instanceMaterial.SetColor("_TransformColor", transformToColor);
+                Debug.Log($"Transform color set: {transformToColor}");
+            }
+            
+            // Configurar la información de la esfera para el shader
+            if (colorSphereComponent != null)
+            {
+                Vector3 sphereWorldPos = colorSphereComponent.transform.position;
+                float sphereRadius = colorSphereComponent.GetCurrentRadius();
+                
+                if (instanceMaterial.HasProperty("_SphereCenter"))
+                {
+                    instanceMaterial.SetVector("_SphereCenter", new Vector4(sphereWorldPos.x, sphereWorldPos.y, sphereWorldPos.z, 0));
+                    Debug.Log($"Sphere center set: {sphereWorldPos}");
+                }
+                
+                if (instanceMaterial.HasProperty("_SphereRadius"))
+                {
+                    instanceMaterial.SetFloat("_SphereRadius", sphereRadius);
+                    Debug.Log($"Sphere radius set: {sphereRadius}");
+                }
+                
+                if (instanceMaterial.HasProperty("_SphereFadeEdge"))
+                {
+                    instanceMaterial.SetFloat("_SphereFadeEdge", 0.5f); // Fade suave en los bordes
+                }
+            }
+            else
+            {
+                Debug.LogWarning("ColorSphere component not found - transformation will be visible everywhere");
+            }
             
             npcRenderer.material = instanceMaterial;
+            Debug.Log("Material instance applied to NPC renderer");
             
-            // Animar la transformación
+            // Empezar el fade-out de partículas AHORA para que terminen con la transformación
+            // NOTA: Como las partículas ahora duran exactamente 2 segundos desde el ParticleSystem,
+            // no necesitamos hacer fade manual. Se destruirán automáticamente.
+            
+            // Animar la transformación (con actualización dinámica del radio de la esfera)
             yield return StartCoroutine(AnimateTransformation(instanceMaterial));
         }
         else
         {
+            Debug.LogWarning($"Missing components - npcRenderer: {npcRenderer}, transformationMaterial: {transformationMaterial}");
             // Si no hay shader, solo esperamos la duración
             yield return new WaitForSeconds(transformationDuration);
         }
         
-        // 4. Limpiar efecto de partículas
+        // 5. Las partículas se destruyen automáticamente después de 2 segundos
         if (activeTransformationEffect != null)
         {
-            Destroy(activeTransformationEffect);
+            // Esperar un poco para que las partículas terminen naturalmente
+            yield return new WaitForSeconds(0.2f);
+            
+            // Verificar si el objeto todavía existe antes de destruirlo
+            if (activeTransformationEffect != null)
+            {
+                Destroy(activeTransformationEffect);
+            }
         }
         
         Debug.Log($"{npcName}: Transformation complete!");
         
-        // 5. Continuar con el diálogo y la esfera
+        // 6. Continuar con el diálogo de éxito
         yield return StartCoroutine(ShowSuccessDialogue());
     }
     
     System.Collections.IEnumerator AnimateTransformation(Material material)
     {
-        Material originalMaterial = npcRenderer.material; // Guardar material original
+        // Guardar material original ANTES de cambiar el material del renderer
+        Material originalMaterial = null;
+        SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
+        if (spriteRenderer != null)
+        {
+            originalMaterial = spriteRenderer.sharedMaterial; // Usar sharedMaterial para obtener el original
+        }
+        
+        Debug.Log($"Starting transformation animation. Original material: {originalMaterial?.name}");
         
         // Fase 1: Transformación hacia adelante (0 a 1)
         float elapsedTime = 0f;
@@ -259,6 +335,18 @@ public class NPCInteraction : MonoBehaviour
             if (material.HasProperty(transformationShaderProperty))
             {
                 material.SetFloat(transformationShaderProperty, progress);
+                Debug.Log($"Transformation progress: {progress:F2}");
+            }
+            else
+            {
+                Debug.LogWarning($"Material does not have property: {transformationShaderProperty}");
+            }
+            
+            // Actualizar el radio de la esfera dinámicamente
+            if (colorSphereComponent != null && material.HasProperty("_SphereRadius"))
+            {
+                float currentRadius = colorSphereComponent.GetCurrentRadius();
+                material.SetFloat("_SphereRadius", currentRadius);
             }
             
             yield return null;
@@ -287,6 +375,13 @@ public class NPCInteraction : MonoBehaviour
                 material.SetFloat(transformationShaderProperty, progress);
             }
             
+            // Continuar actualizando el radio de la esfera
+            if (colorSphereComponent != null && material.HasProperty("_SphereRadius"))
+            {
+                float currentRadius = colorSphereComponent.GetCurrentRadius();
+                material.SetFloat("_SphereRadius", currentRadius);
+            }
+            
             yield return null;
         }
         
@@ -299,15 +394,25 @@ public class NPCInteraction : MonoBehaviour
         yield return new WaitForSeconds(0.2f); // Pequeña pausa
         
         // Restaurar el material original del sprite
-        if (originalMaterial != material)
+        if (originalMaterial != null && spriteRenderer != null)
         {
-            npcRenderer.material = originalMaterial;
+            spriteRenderer.material = originalMaterial;
+            Debug.Log($"Original material restored: {originalMaterial.name}");
+        }
+        else
+        {
+            Debug.LogWarning("Could not restore original material - using default sprite material");
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.material = null; // Esto usa el material por defecto de sprites
+            }
         }
         
         // Limpiar la instancia del material
         if (material != null && material != originalMaterial)
         {
             DestroyImmediate(material);
+            Debug.Log("Transformation material instance destroyed");
         }
     }
 
@@ -326,11 +431,8 @@ public class NPCInteraction : MonoBehaviour
             Debug.Log("Press E to continue...");
         }
 
-        // Expandir la esfera y activar animación
-        if (colorSphereComponent != null)
-        {
-            StartCoroutine(GrowColorSphere());
-        }
+        // La ColorSphere ya fue expandida antes de la transformación
+        // No necesitamos hacer nada más aquí
     }
 
     void HideDialogue()
@@ -487,5 +589,176 @@ public class NPCInteraction : MonoBehaviour
         {
             StartCoroutine(TransformationSequence());
         }
+    }
+    
+    // Función para hacer aparecer las partículas gradualmente
+    System.Collections.IEnumerator FadeInParticles(GameObject particleObject)
+    {
+        if (particleObject == null) yield break;
+        
+        // Obtener todos los sistemas de partículas
+        ParticleSystem[] particleSystems = particleObject.GetComponentsInChildren<ParticleSystem>();
+        
+        if (particleSystems.Length == 0)
+        {
+            Debug.LogWarning("No particle systems found in transformation effect!");
+            yield break;
+        }
+        
+        Debug.Log($"Found {particleSystems.Length} particle systems to fade in");
+        
+        // Guardar las configuraciones originales
+        float[] originalEmissionRate = new float[particleSystems.Length];
+        
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            var emission = particleSystems[i].emission;
+            originalEmissionRate[i] = emission.rateOverTime.constant;
+            
+            // Empezar con emisión en 0
+            emission.rateOverTime = 0f;
+            
+            Debug.Log($"Particle system {i}: {particleSystems[i].name} - Original emission: {originalEmissionRate[i]}");
+        }
+        
+        // Fade in gradual durante 1.2 segundos
+        float fadeInDuration = 1.2f;
+        float elapsed = 0f;
+        
+        while (elapsed < fadeInDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / fadeInDuration;
+            
+            for (int i = 0; i < particleSystems.Length; i++)
+            {
+                var emission = particleSystems[i].emission;
+                
+                // Interpolar hacia los valores originales
+                emission.rateOverTime = Mathf.Lerp(0f, originalEmissionRate[i], progress);
+            }
+            
+            yield return null;
+        }
+        
+        // Asegurar que lleguen a los valores originales
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            var emission = particleSystems[i].emission;
+            emission.rateOverTime = originalEmissionRate[i];
+        }
+        
+        Debug.Log("Particle fade-in complete");
+    }
+    
+    // Función para hacer desaparecer las partículas gradualmente
+    System.Collections.IEnumerator FadeOutParticles(GameObject particleObject)
+    {
+        if (particleObject == null) yield break;
+        
+        // Obtener todos los sistemas de partículas
+        ParticleSystem[] particleSystems = particleObject.GetComponentsInChildren<ParticleSystem>();
+        
+        if (particleSystems.Length == 0) yield break;
+        
+        Debug.Log($"Found {particleSystems.Length} particle systems to fade out");
+        
+        // Guardar las configuraciones actuales y módulos de color
+        float[] currentEmissionRate = new float[particleSystems.Length];
+        ParticleSystem.ColorOverLifetimeModule[] colorModules = new ParticleSystem.ColorOverLifetimeModule[particleSystems.Length];
+        bool[] hadColorOverLifetime = new bool[particleSystems.Length];
+        
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            var emission = particleSystems[i].emission;
+            currentEmissionRate[i] = emission.rateOverTime.constant;
+            
+            // Configurar el módulo de color over lifetime para controlar alpha
+            colorModules[i] = particleSystems[i].colorOverLifetime;
+            hadColorOverLifetime[i] = colorModules[i].enabled;
+            colorModules[i].enabled = true;
+            
+            // Crear un gradiente que va de opaco a transparente MÁS RÁPIDO
+            Gradient gradient = new Gradient();
+            GradientColorKey[] colorKeys = new GradientColorKey[2];
+            GradientAlphaKey[] alphaKeys = new GradientAlphaKey[4]; // Más puntos de control
+            
+            // Color: mantener el color original
+            colorKeys[0].color = Color.white;
+            colorKeys[0].time = 0.0f;
+            colorKeys[1].color = Color.white;
+            colorKeys[1].time = 1.0f;
+            
+            // Alpha: fade más agresivo y rápido
+            alphaKeys[0].alpha = 1.0f; // Completamente opaco al inicio
+            alphaKeys[0].time = 0.0f;
+            alphaKeys[1].alpha = 0.8f; // Mantener opacidad al 50% del lifetime
+            alphaKeys[1].time = 0.5f;
+            alphaKeys[2].alpha = 0.2f; // Fade rápido al 75%
+            alphaKeys[2].time = 0.75f;
+            alphaKeys[3].alpha = 0.0f; // Completamente transparente al final
+            alphaKeys[3].time = 1.0f;
+            
+            gradient.SetKeys(colorKeys, alphaKeys);
+            colorModules[i].color = gradient;
+            
+            Debug.Log($"Particle system {i}: {particleSystems[i].name} - Emission rate: {currentEmissionRate[i]}");
+        }
+        
+        // Primero, detener la emisión de nuevas partículas gradualmente
+        // Las partículas deben terminar exactamente cuando termine la transformación completa
+        // Transformación total: 2s (ida) + 3s (pausa) + 1.5s (vuelta) = 6.5s
+        float totalTransformationTime = 6.5f;
+        float stopEmissionDuration = totalTransformationTime * 0.25f; // 25% del tiempo para parar emisión (1.6s)
+        float fadeWaitTime = totalTransformationTime * 0.75f; // 75% restante para fade (4.9s)
+        
+        float elapsed = 0f;
+        
+        while (elapsed < stopEmissionDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / stopEmissionDuration;
+            float fadeValue = 1f - progress; // De 1 a 0
+            
+            for (int i = 0; i < particleSystems.Length; i++)
+            {
+                var emission = particleSystems[i].emission;
+                emission.rateOverTime = currentEmissionRate[i] * fadeValue;
+            }
+            
+            yield return null;
+        }
+        
+        // Detener completamente la emisión
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            var emission = particleSystems[i].emission;
+            emission.rateOverTime = 0f;
+        }
+        
+        Debug.Log($"Emission stopped, waiting {fadeWaitTime:F1}s for particles to fade with transformation...");
+        
+        // Esperar el tiempo restante para sincronizar con el final de la transformación
+        yield return new WaitForSeconds(fadeWaitTime);
+        
+        // Limpiar cualquier partícula restante al final
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            if (particleSystems[i] != null)
+            {
+                particleSystems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+        }
+        
+        // Restaurar configuraciones originales si es necesario
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            if (!hadColorOverLifetime[i])
+            {
+                colorModules[i].enabled = false;
+            }
+        }
+        
+        Debug.Log("Particle fade-out complete");
     }
 }

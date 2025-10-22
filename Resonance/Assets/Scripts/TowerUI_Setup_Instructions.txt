@@ -1,0 +1,53 @@
+/*
+INSTRUCCIONES PARA CONFIGURAR EL UI DE LA TORRE:
+
+1. CREAR LA ESTRUCTURA DE UI:
+   - Crear un Canvas en la escena (si no existe)
+   - Crear un GameObject vacío llamado "TowerUI" como hijo del Canvas
+   - Añadir el script TowerUI.cs al GameObject "TowerUI"
+
+2. CONFIGURAR WARNING PANEL:
+   - Crear Panel hijo de TowerUI llamado "WarningPanel"
+   - Crear Text (TMP) hijo de WarningPanel para el mensaje
+   - Asignar en el inspector del TowerUI:
+     * Warning Panel: el panel creado
+     * Warning Text: el texto TMP creado
+
+3. CONFIGURAR CONFIRMATION PANEL:
+   - Crear Panel hijo de TowerUI llamado "ConfirmationPanel"
+   - Crear Text (TMP) hijo para el mensaje de confirmación
+   - Crear dos botones: "Continue" y "Cancel"
+   - Asignar en el inspector del TowerUI:
+     * Confirmation Panel: el panel creado
+     * Confirmation Text: el texto TMP creado
+     * Continue Button: botón de continuar
+     * Cancel Button: botón de cancelar
+
+4. ESTRUCTURA FINAL RECOMENDADA:
+   Canvas
+   └── TowerUI (con script TowerUI)
+       ├── WarningPanel
+       │   └── WarningText (TMP)
+       └── ConfirmationPanel
+           ├── ConfirmationText (TMP)
+           ├── ContinueButton
+           └── CancelButton
+
+5. CONFIGURACIÓN ADICIONAL:
+   - Ajustar Message Duration (duración del mensaje de warning)
+   - Ajustar Animation Duration (velocidad de las animaciones)
+   - Configurar las curvas de animación si quieres efectos específicos
+
+6. ESTILOS RECOMENDADOS:
+   Warning Panel:
+   - Background: Semi-transparente rojo/amarillo
+   - Posición: Parte superior de la pantalla
+   
+   Confirmation Panel:
+   - Background: Semi-transparente oscuro
+   - Posición: Centro de la pantalla
+   - Botones con colores distintivos (verde para continuar, rojo para cancelar)
+
+El sistema está diseñado para ser plug-and-play. Solo necesitas crear la estructura de UI y 
+asignar las referencias en el inspector.
+*/
