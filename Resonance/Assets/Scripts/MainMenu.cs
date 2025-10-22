@@ -5,38 +5,21 @@ using UnityEngine.Video;
 
 public class MainMenu : MonoBehaviour
 {
-    public VideoPlayer videoPlayer;        // Asigna en Inspector
-    public GameObject mainMenuPanel;       // Panel con los botones
-    public string levelToLoad = "Level 1";
+    [SerializeField] private string introSceneName = "IntroScene";
 
     private void Start()
     {
-        AudioManager.instance.PlayMusic(0);
-
-        if (videoPlayer != null)
-        {
-            videoPlayer.gameObject.SetActive(false);
-            videoPlayer.loopPointReached += OnVideoFinished;
-        }
+            AudioManager.instance.PlayMusic(0);
     }
 
-    public void PlayGame()
+
+    public void NextScene()
     {
-        mainMenuPanel.SetActive(false); // Oculta los botones
-        videoPlayer.gameObject.SetActive(true);
-        videoPlayer.Play();
+        SceneManager.LoadScene(introSceneName);
     }
-
-    void OnVideoFinished(VideoPlayer vp)
-    {
-        Destroy(videoPlayer.gameObject);
-        SceneManager.LoadSceneAsync(levelToLoad);
-    }
-
 
     public void QuitGame()
     {
-        Debug.Log("Salir...");
         Application.Quit();
     }
 }

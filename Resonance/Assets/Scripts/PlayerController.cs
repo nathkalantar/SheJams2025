@@ -5,7 +5,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private Animator animator;
     [SerializeField] private SpriteRenderer spriteRenderer;
-
+    [SerializeField] private Transform cameraTransform; // Referencia a la cámara
+    
     private CharacterController controller;
     private Vector3 moveDirection;
     private bool facingRight = false;
@@ -27,6 +28,14 @@ public class PlayerController : MonoBehaviour
 
         if (spriteRenderer != null)
             spriteRenderer.flipX = false;
+            
+        // Si no se asignó la cámara manualmente, buscar la cámara principal
+        if (cameraTransform == null)
+        {
+            Camera mainCamera = Camera.main;
+            if (mainCamera != null)
+                cameraTransform = mainCamera.transform;
+        }
     }
 
     void Update()
@@ -40,33 +49,43 @@ public class PlayerController : MonoBehaviour
     {
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
-
-        // Get camera-relative directions (flattened to XZ plane for 2.5D movement)
-        Vector3 cameraForward = Camera.main.transform.forward;
-        cameraForward.y = 0f;  // Ignore Y to keep movement on ground
-        cameraForward.Normalize();
-
-        Vector3 cameraRight = Camera.main.transform.right;
-        cameraRight.y = 0f;  // Ignore Y
-        cameraRight.Normalize();
-
-        // Calculate movement direction relative to camera
-        Vector3 direction = (cameraRight * horizontal + cameraForward * vertical).normalized;
-
-        if (direction.magnitude >= 0.1f)
+        
+        // Crear vector de entrada
+        Vector3 inputDirection = new Vector3(horizontal, 0f, vertical).normalized;
+        
+        if (inputDirection.magnitude >= 0.1f && cameraTransform != null)
         {
+            // Obtener la dirección hacia adelante y derecha de la cámara (ignorando rotación Y)
+            Vector3 cameraForward = cameraTransform.forward;
+            Vector3 cameraRight = cameraTransform.right;
+            
+            // Proyectar las direcciones de la cámara en el plano horizontal (Y = 0)
+            cameraForward.y = 0f;
+            cameraRight.y = 0f;
+            cameraForward.Normalize();
+            cameraRight.Normalize();
+            
+            // Calcular dirección de movimiento relativa a la cámara
+            Vector3 moveDirection = cameraForward * inputDirection.z + cameraRight * inputDirection.x;
+            moveDirection.Normalize();
+            
+            // Mover el personaje
+            controller.Move(moveDirection * moveSpeed * Time.deltaTime);
+            
+            // Guardar la dirección para el flip
+            this.moveDirection = moveDirection;
+        }
+        else if (inputDirection.magnitude >= 0.1f)
+        {
+            // Fallback: movimiento absoluto si no hay cámara
+            Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
             moveDirection = direction;
             // Update lastMoveDirection for NPCs
             lastMoveDirection = direction;
             controller.Move(moveDirection * moveSpeed * Time.deltaTime);
         }
-        else
-        {
-            // If not moving, keep last direction
-            moveDirection = Vector3.zero;
-        }
-
-        // Apply gravity (adjust 9.81f if your game has custom gravity)
+        
+        // Aplicar gravedad
         controller.Move(Vector3.down * 9.81f * Time.deltaTime);
     }
 
@@ -83,15 +102,20 @@ public class PlayerController : MonoBehaviour
 
     void HandleFlip()
     {
-        float horizontal = Input.GetAxis("Horizontal");
-
-        if (horizontal > 0 && !facingRight)
+        // Usar la dirección de movimiento real (relativa a la cámara) para el flip
+        if (moveDirection.magnitude > 0.1f)
         {
-            Flip();
-        }
-        else if (horizontal < 0 && facingRight)
-        {
-            Flip();
+            // Determinar dirección basada en el componente X del movimiento mundial
+            bool shouldFaceRight = moveDirection.x > 0;
+            
+            if (shouldFaceRight && !facingRight)
+            {
+                Flip();
+            }
+            else if (!shouldFaceRight && facingRight)
+            {
+                Flip();
+            }
         }
     }
 
