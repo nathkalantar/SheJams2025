@@ -10,6 +10,9 @@ public class PlayerController : MonoBehaviour
     private Vector3 moveDirection;
     private bool facingRight = false;
 
+    // Public property for NPCs to access the player's last movement direction
+    public Vector3 lastMoveDirection { get; private set; } = Vector3.forward;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -53,7 +56,14 @@ public class PlayerController : MonoBehaviour
         if (direction.magnitude >= 0.1f)
         {
             moveDirection = direction;
+            // Update lastMoveDirection for NPCs
+            lastMoveDirection = direction;
             controller.Move(moveDirection * moveSpeed * Time.deltaTime);
+        }
+        else
+        {
+            // If not moving, keep last direction
+            moveDirection = Vector3.zero;
         }
 
         // Apply gravity (adjust 9.81f if your game has custom gravity)
@@ -73,20 +83,15 @@ public class PlayerController : MonoBehaviour
 
     void HandleFlip()
     {
-        // Only flip if there's movement input
         float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
 
-        if (Mathf.Abs(horizontal) > 0.1f || Mathf.Abs(vertical) > 0.1f)
+        if (horizontal > 0 && !facingRight)
         {
-            // Check the horizontal component of movement in camera space
-            // Positive horizontal means "right" relative to camera
-            bool shouldFaceRight = horizontal > 0;
-
-            if (shouldFaceRight != facingRight)
-            {
-                Flip();
-            }
+            Flip();
+        }
+        else if (horizontal < 0 && facingRight)
+        {
+            Flip();
         }
     }
 
@@ -106,3 +111,4 @@ public class PlayerController : MonoBehaviour
         }
     }
 }
+
