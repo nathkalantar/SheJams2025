@@ -8,13 +8,13 @@ using UnityEngine.SceneManagement;
 public class FinalCutSceneController : MonoBehaviour
 {
     public VideoPlayer videoPlayer;
-    public GameObject endPanel; // UI con botón
+    public GameObject endPanel; // UI con botï¿½n
     public float delayAfterEnd = 2f;
 
     void Start()
     {
         endPanel.SetActive(false);
-        videoPlayer.loopPointReached += OnVideoFinished;
+        //videoPlayer.loopPointReached += OnVideoFinished;
     }
 
     void OnVideoFinished(VideoPlayer vp)
