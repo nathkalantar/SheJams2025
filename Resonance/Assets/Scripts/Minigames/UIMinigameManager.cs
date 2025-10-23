@@ -18,6 +18,7 @@ public class UIMinigameManager : MonoBehaviour
     private MinigameData currentData;
     private DraggableItem[] items;
     private DropZone[] dropZones;
+    private bool isMinigameActive = false; // Para controlar el estado del minijuego
     
     void Awake()
     {
@@ -39,6 +40,7 @@ public class UIMinigameManager : MonoBehaviour
     void StartMinigame(MinigameData data)
     {
         currentData = data;
+        isMinigameActive = true;
         SetupMinigame();
         minigamePanel.SetActive(true);
         
@@ -134,6 +136,7 @@ public class UIMinigameManager : MonoBehaviour
 
     void CloseMinigame()
     {
+        isMinigameActive = false;
         CanvasGroup panelCanvasGroup = minigamePanel.GetComponent<CanvasGroup>();
         if (panelCanvasGroup == null)
             panelCanvasGroup = minigamePanel.AddComponent<CanvasGroup>();
@@ -153,5 +156,13 @@ public class UIMinigameManager : MonoBehaviour
             item.ResetItem();
         foreach (DropZone zone in dropZones)
             zone.ResetZone();
+    }
+    
+    /// <summary>
+    /// Check if a minigame is currently active
+    /// </summary>
+    public bool IsMinigameActive()
+    {
+        return isMinigameActive;
     }
 }

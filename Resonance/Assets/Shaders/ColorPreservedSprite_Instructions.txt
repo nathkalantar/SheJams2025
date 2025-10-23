@@ -1,0 +1,78 @@
+# MATERIAL DE PRESERVACIÓN DE COLOR - INSTRUCCIONES
+
+## CONFIGURACIÓN DEL MATERIAL:
+
+1. **Crear el Material:**
+   - Ve a tu carpeta de Materials
+   - Click derecho → Create → Material
+   - Nómbralo "ColorPreservedSprite"
+
+2. **Asignar el Shader:**
+   - Selecciona el material
+   - En el inspector, cambia el Shader a "Custom/ColorPreservedSprite"
+
+3. **Configurar Propiedades ULTRA-AGRESIVAS:**
+   - **Color Preservation**: 1.0 (máxima preservación)
+   - **Color Boost**: 2.5 (250% más intenso)
+   - **Saturation Multiplier**: 3.0 (300% más saturado)
+   - **Anti Desaturation Power**: 5.0 (resistencia extrema)
+   - **Color Intensity**: 2.0 (doble intensidad)
+
+## INTEGRACIÓN CON NPC:
+
+El material se aplicará automáticamente al final de la transformación.
+No necesitas cambiar código adicional.
+
+## PROPIEDADES EXPLICADAS:
+
+### **Color Preservation (0-1):**
+- 0 = El sprite puede ser afectado por desaturación
+- 1 = El sprite mantiene completamente su color original
+
+### **Color Boost (1.0-5.0):**
+- 1.0 = Intensidad normal
+- 2.5 = 250% más brillante (RECOMENDADO para resistir B&N)
+- 5.0 = Intensidad máxima
+
+### **Saturation Multiplier (1.0-5.0):**
+- 1.0 = Saturación normal
+- 3.0 = 300% más saturado (RECOMENDADO)
+- 5.0 = Súper saturado extremo
+
+### **Anti Desaturation Power (1.0-10.0):**
+- 1.0 = Sin resistencia especial
+- 5.0 = Resistencia alta (RECOMENDADO)
+- 10.0 = Resistencia máxima contra filtros externos
+
+### **Color Intensity (1.0-3.0):**
+- 1.0 = Intensidad base
+- 2.0 = Doble intensidad (RECOMENDADO)
+- 3.0 = Triple intensidad
+
+## CÓMO FUNCIONA:
+
+1. **Sobresaturación extrema**: Multiplica la saturación por 3x o más
+2. **Anti-desaturación**: Usa funciones matemáticas para "blindar" cada canal RGB
+3. **Intensificación por canal**: Hace rojos más rojos, verdes más verdes, etc.
+4. **Boost de intensidad**: Multiplica el brillo hasta 5x
+5. **Preservación forzada**: "Fuerza" el color a resistir filtros externos
+6. **Compatibilidad sprite**: Mantiene transparencia y funcionalidad 2D
+
+## RESULTADO ESPERADO:
+
+- **Resistencia total**: El sprite mantiene colores VIBRANTES contra cualquier filtro B&N
+- **Colores intensos**: Se ven súper saturados y brillantes
+- **Contraste extremo**: Destacan completamente del entorno desaturado
+- **Efecto "mágico"**: Parecen "brillar" con vida propia
+
+## TROUBLESHOOTING:
+
+**Si el sprite se ve muy brillante:**
+- Reduce "Color Boost" a 1.0-1.1
+
+**Si los colores no se preservan:**
+- Aumenta "Color Preservation" a 1.0
+- Aumenta "Saturation Multiplier" a 2.0
+
+**Si hay problemas de transparencia:**
+- Verifica que el sprite original tenga alpha correctamente configurado

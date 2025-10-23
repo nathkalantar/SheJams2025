@@ -1,0 +1,118 @@
+# SOLUCIÓN CORRECTA: RENDER QUEUE OVERLAY
+
+## 🎯 ENFOQUE CORRECTO - IGNORAR EL FILTRO
+
+### ❌ ENFOQUE ANTERIOR (INCORRECTO):
+- Intentar "resistir" el filtro de desaturación
+- Boost extremo de colores para "vencer" el filtro
+- Lucha contra el post-processing
+
+### ✅ ENFOQUE NUEVO (CORRECTO):
+- El filtro ignora completamente estos sprites
+- Se renderizan DESPUÉS del filtro de B&N
+- No hay conflicto - simplemente se saltean
+
+## 🔧 CÓMO FUNCIONA:
+
+### **1. Order de Render:**
+```
+1. Objetos normales (Opaque, Transparent) → Afectados por filtro B&N
+2. Filtro ScreenDesaturation (Image Effect) → Aplica B&N a todo lo anterior
+3. Sprites ColorPreserved (Queue=Overlay) → Se renderizan ENCIMA del filtro
+```
+
+### **2. Tags del Shader:**
+```hlsl
+Tags
+{
+    "Queue"="Overlay"        // ¡CLAVE! Se renderiza al final
+    "IgnoreProjector"="True" // Ignora proyectores
+    "RenderType"="Transparent"
+}
+```
+
+### **3. Configuración de Render:**
+```hlsl
+ZTest Always    // Siempre pasa el depth test
+ZWrite Off      // No escribe al depth buffer
+Blend One OneMinusSrcAlpha  // Blend correcto para sprites
+```
+
+## 🎨 RESULTADO:
+
+### **✅ Lo que pasa ahora:**
+1. **Mundo normal** → Se renderiza primero
+2. **Filtro B&N** → Se aplica al mundo
+3. **NPCs preservados** → Se dibujan ENCIMA del filtro con colores normales
+
+### **🌈 Efecto visual:**
+- **Mundo**: Blanco y negro (filtro aplicado)
+- **NPCs transformados**: Colores vivos (completamente ignorados por el filtro)
+- **Sin conflicto**: No hay "lucha" entre sistemas
+
+## ⚙️ CONFIGURACIÓN SIMPLIFICADA:
+
+### **Material Setup:**
+1. Crea material con shader `Custom/ColorPreservedSprite`
+2. ¡NO hay propiedades especiales que configurar!
+3. Funciona automáticamente
+
+### **En el NPC:**
+- Asigna el material al campo `colorPreservedMaterial`
+- El sistema lo aplica automáticamente después de la transformación
+
+## 💡 VENTAJAS DE ESTA SOLUCIÓN:
+
+### **✅ Simplicidad:**
+- No necesitas configurar valores complejos
+- No hay propiedades de "intensidad" o "resistencia"
+- Funciona con cualquier sprite sin modificación
+
+### **✅ Rendimiento:**
+- No hay cálculos complejos en el shader
+- No hay "lucha" entre efectos
+- Render order optimizado
+
+### **✅ Mantenimiento:**
+- Una sola configuración que funciona siempre
+- No necesitas ajustar por sprite
+- Compatible con cualquier filtro de post-processing
+
+### **✅ Robustez:**
+- Funciona independientemente del filtro usado
+- No se rompe si cambias el post-processing
+- Escalable a múltiples NPCs
+
+## 🧪 TESTING:
+
+### **Para verificar que funciona:**
+1. Aplica el material al NPC transformado
+2. Activa el filtro de B&N global
+3. El NPC debería verse a TODO COLOR
+4. El resto del mundo en B&N
+
+### **Debug rápido:**
+```csharp
+// Aplica inmediatamente para testing
+npc.ApplyColorPreservation();
+```
+
+## 🔍 COMPARACIÓN:
+
+### **Antes (Resistencia):**
+```
+Sprite intenta resistir → Filtro lo desatura → Lucha constante → Resultados inconsistentes
+```
+
+### **Ahora (Ignorar):**
+```
+Filtro desatura el mundo → Sprite se renderiza después → Sin conflicto → Colores perfectos
+```
+
+## 🎯 PRINCIPIO CLAVE:
+
+> **"En lugar de luchar contra el filtro, simplemente evítalo completamente"**
+
+Esta es la solución elegante y correcta. El sprite no "resiste" el filtro - simplemente nunca lo encuentra porque se renderiza después.
+
+¡Es como llegar después de que termine la lluvia en lugar de usar un paraguas! ☂️ → ☀️

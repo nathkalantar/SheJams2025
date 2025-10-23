@@ -174,8 +174,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbaf29c43d5e6bc4eb24f58e48bbc058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioS: {fileID: 0}
-  audioM: {fileID: 0}
+  audioS: {fileID: 4054720694233491117}
+  audioM: {fileID: 4569238432903862255}
   pistas_Sfx: []
   pistas_Musica: []
 --- !u!1 &6466891178881937868

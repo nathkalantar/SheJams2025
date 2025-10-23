@@ -1,0 +1,155 @@
+# SOLUCIONES ALTERNATIVAS PARA PRESERVACIÓN DE COLOR
+
+## 🎯 PROBLEMA IDENTIFICADO:
+El filtro de post-processing se aplica a TODA la pantalla después del render, ignorando el Queue de render de shaders individuales.
+
+## 💡 SOLUCIONES ALTERNATIVAS:
+
+### **SOLUCIÓN 1: SORTING LAYERS (MÁS SIMPLE)**
+
+#### **Configuración:**
+1. **Ve a Edit → Project Settings → Tags and Layers**
+2. **Añade un nuevo Sorting Layer**: `"ColorPreserved"`
+3. **Asígnalo al NPC transformado**:
+   ```csharp
+   // En NPCInteraction.cs después de aplicar el material
+   spriteRenderer.sortingLayerName = "ColorPreserved";
+   spriteRenderer.sortingOrder = 100;
+   ```
+
+#### **Ventajas:**
+- ✅ Muy simple de implementar
+- ✅ No requiere shaders complicados
+- ✅ Unity maneja el order automáticamente
+
+#### **Desventajas:**
+- ❌ Puede que no funcione con post-processing global
+
+---
+
+### **SOLUCIÓN 2: CÁMARA SEPARADA (MÁS ROBUSTA)**
+
+#### **Setup:**
+1. **Crea una segunda cámara** para sprites preservados
+2. **Configura las cámaras**:
+   ```
+   Main Camera:
+   - Culling Mask: Everything EXCEPT "ColorPreserved"
+   - Depth: 0
+   - Aplica post-processing aquí
+   
+   Color Camera:
+   - Culling Mask: SOLO "ColorPreserved" 
+   - Depth: 1 (render después)
+   - Sin post-processing
+   ```
+
+#### **Código automático:**
+```csharp
+// En NPCInteraction.cs
+void ApplyColorPreservation()
+{
+    // Cambiar layer del NPC
+    gameObject.layer = LayerMask.NameToLayer("ColorPreserved");
+    
+    // Aplicar material normal (sin efectos especiales)
+    spriteRenderer.material = colorPreservedMaterial;
+}
+```
+
+#### **Ventajas:**
+- ✅ Funciona garantizado
+- ✅ Separación completa del post-processing
+- ✅ Fácil de configurar
+
+#### **Desventajas:**
+- ❌ Requiere configuración manual en escena
+- ❌ Dos cámaras = más overhead
+
+---
+
+### **SOLUCIÓN 3: COMMAND BUFFER (MÁS AVANZADA)**
+
+#### **Usa el script que creé**: `ColorPreservationRenderer.cs`
+
+#### **Setup:**
+1. **Añadir a Main Camera** (automático)
+2. **En NPCInteraction.cs**:
+   ```csharp
+   // Descomentar las líneas TODO
+   ColorPreservationRenderer.RegisterRenderer(spriteRenderer);
+   ```
+
+#### **Ventajas:**
+- ✅ Render después de post-processing garantizado
+- ✅ Automático una vez configurado
+- ✅ Escalable a múltiples NPCs
+
+#### **Desventajas:**
+- ❌ Más complejo de debugear
+- ❌ Requiere conocimiento de Command Buffers
+
+---
+
+### **SOLUCIÓN 4: UI CANVAS (MÁS HACK-Y)**
+
+#### **Concepto:**
+Convertir el sprite a un **Image** en un Canvas con **Overlay** mode.
+
+#### **Setup:**
+```csharp
+void ApplyColorPreservation()
+{
+    // Crear Canvas overlay
+    GameObject canvasGO = new GameObject("ColorPreservedCanvas");
+    Canvas canvas = canvasGO.AddComponent<Canvas>();
+    canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+    canvas.sortingOrder = 1000;
+    
+    // Convertir sprite a UI Image
+    GameObject imageGO = new GameObject("ColorPreservedSprite");
+    imageGO.transform.SetParent(canvasGO.transform);
+    
+    Image image = imageGO.AddComponent<Image>();
+    image.sprite = spriteRenderer.sprite;
+    
+    // Posicionar en mundo
+    RectTransform rect = imageGO.GetComponent<RectTransform>();
+    Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position);
+    rect.position = screenPos;
+}
+```
+
+#### **Ventajas:**
+- ✅ Render garantizado después de todo
+- ✅ No requiere configuración de cámaras
+
+#### **Desventajas:**
+- ❌ Hack-y y frágil
+- ❌ Problemas de posicionamiento
+- ❌ No es "real" 3D
+
+---
+
+## 🏆 RECOMENDACIÓN:
+
+### **Para testing rápido**: Usar SOLUCIÓN 1 (Sorting Layers)
+### **Para producción**: Usar SOLUCIÓN 2 (Cámara Separada)
+
+## 🧪 TESTING RÁPIDO - SOLUCIÓN 1:
+
+1. **Añade Sorting Layer** `"ColorPreserved"`
+2. **En NPCInteraction.cs**, añade esto después de aplicar el material:
+   ```csharp
+   spriteRenderer.sortingLayerName = "ColorPreserved";
+   spriteRenderer.sortingOrder = 100;
+   ```
+3. **Prueba** - debería renderizarse encima de todo
+
+Si eso no funciona, entonces el problema es definitivamente el post-processing global y necesitamos la SOLUCIÓN 2.
+
+## 🎯 NEXT STEPS:
+
+1. ¿Probar Sorting Layers primero?
+2. ¿O ir directo a la solución de cámara separada?
+3. ¿Necesitas ayuda configurando cualquiera de estas?

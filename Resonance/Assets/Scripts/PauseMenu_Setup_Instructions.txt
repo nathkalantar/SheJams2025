@@ -1,0 +1,159 @@
+# PAUSE MENU - INSTRUCCIONES DE CONFIGURACIÓN
+
+## CARACTERÍSTICAS PRINCIPALES:
+- Pausa completa del juego (Time.timeScale = 0)
+- Tecla ESC para pausar/reanudar
+- Botones: Resume, Main Menu, Quit Game
+- Animaciones suaves de fade in/out
+- Soporte para sonidos (opcional)
+- Singleton pattern para fácil acceso
+- Auto-pausa al perder foco de ventana
+
+## CONFIGURACIÓN PASO A PASO:
+
+### 1. SETUP BÁSICO:
+1. Crea un GameObject vacío y nómbralo "PauseMenu"
+2. Añade el script PauseMenu.cs
+3. Crea un Canvas para la UI (si no tienes uno)
+4. Dentro del Canvas, crea un Panel para el menú de pausa
+
+### 2. ESTRUCTURA DE UI RECOMENDADA:
+```
+Canvas
+└── PauseMenuPanel
+    ├── Background (Panel con color semi-transparente)
+    ├── MenuContainer (Panel central)
+    │   ├── Title (Text: "GAME PAUSED")
+    │   ├── ResumeButton (Button: "Resume Game")
+    │   ├── MainMenuButton (Button: "Main Menu")
+    │   └── QuitButton (Button: "Quit Game")
+    └── CanvasGroup (Componente automático)
+```
+
+### 3. CONFIGURAR EL SCRIPT:
+En el inspector del PauseMenu:
+
+**Pause Menu UI:**
+- Pause Menu Panel: Arrastra el panel principal
+- Pause Canvas Group: Se creará automáticamente
+
+**Buttons:**
+- Resume Button: Arrastra el botón de reanudar
+- Main Menu Button: Arrastra el botón de menú principal  
+- Quit Button: Arrastra el botón de salir
+
+**Settings:**
+- Main Menu Scene Name: Nombre de tu escena de menú principal
+- Pause Key: Tecla para pausar (por defecto ESC)
+- Animation Duration: Duración del fade (0.3s recomendado)
+
+**Audio (Opcional):**
+- Audio Source: Componente AudioSource (se puede añadir automáticamente)
+- Pause Sound: Sonido al pausar
+- Unpause Sound: Sonido al reanudar
+- Button Click Sound: Sonido de clicks
+
+### 4. CONFIGURACIÓN DE CANVAS:
+- Render Mode: Screen Space - Overlay
+- Pixel Perfect: ✓ (recomendado)
+- Sort Order: 100 (para que aparezca encima de otros UI)
+
+### 5. CONFIGURACIÓN DEL PANEL:
+- Anchors: Stretch (para cubrir toda la pantalla)
+- Background Color: Negro con Alpha 0.5 (semi-transparente)
+
+### 6. CONFIGURACIÓN DE BOTONES:
+- Navigation: Vertical (para navegar con teclado)
+- Transition: Color Tint o Animation
+- Target Graphic: El componente Image del botón
+
+## USO EN CÓDIGO:
+
+### Pausar desde otro script:
+```csharp
+PauseMenu.Instance.PauseGame();
+```
+
+### Reanudar desde otro script:
+```csharp
+PauseMenu.Instance.ResumeGame();
+```
+
+### Verificar si está pausado:
+```csharp
+if (PauseMenu.Instance.IsPaused)
+{
+    // El juego está pausado
+}
+```
+
+### Override de condiciones de pausa:
+```csharp
+public override bool CanPause()
+{
+    // No pausar durante diálogos
+    if (DialogueManager.Instance.IsInDialogue)
+        return false;
+        
+    return base.CanPause();
+}
+```
+
+## NOTAS IMPORTANTES:
+
+### Time.timeScale:
+- 0 = Completamente pausado
+- 1 = Velocidad normal
+- Se restaura automáticamente al destruir el objeto
+
+### Audio durante pausa:
+- Los sonidos usan `PlayOneShot()` que no se ve afectado por timeScale
+- Para música de fondo, considera pausar/reanudar manualmente
+
+### Compatibilidad con otros sistemas:
+- Partículas: Usa "Unscaled Time" en Simulation Space
+- Animaciones UI: Usa "Update Mode: Unscaled Time"
+- Tweens (DOTween): Usa `.SetUpdate(true)` para que ignoren timeScale
+
+### Persistencia entre escenas:
+- Actualmente NO persiste entre escenas (comentado DontDestroyOnLoad)
+- Descomenta la línea si quieres que persista
+
+## PERSONALIZACIÓN:
+
+### Añadir más opciones:
+1. Settings/Options menu
+2. Save/Load game
+3. Restart level
+4. Controls/Help
+
+### Estilos visuales:
+- Blur effect en el background
+- Animaciones más complejas
+- Efectos de partículas
+- Transiciones de escala
+
+### Controles adicionales:
+- Gamepad support
+- Mouse navigation
+- Keyboard shortcuts
+
+## TROUBLESHOOTING:
+
+**El juego no se pausa:**
+- Verifica que timeScale se esté poniendo a 0
+- Revisa que no haya otros scripts forzando timeScale
+
+**Los sonidos no se escuchan:**
+- Asegúrate de que AudioSource esté configurado
+- Verifica que los clips estén asignados
+
+**UI no aparece:**
+- Revisa que Canvas esté configurado correctamente
+- Verifica que el Sort Order sea alto
+- Asegúrate de que pauseMenuPanel esté asignado
+
+**Botones no responden:**
+- Verifica que CanvasGroup.interactable sea true
+- Revisa que blocksRaycasts esté habilitado
+- Asegúrate de que los botones tengan EventSystem

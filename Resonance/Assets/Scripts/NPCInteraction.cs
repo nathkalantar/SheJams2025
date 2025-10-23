@@ -21,6 +21,7 @@ public class NPCInteraction : MonoBehaviour
     [Header("Transformation Effects")]
     [SerializeField] private AudioClip victorySound;
     [SerializeField] private Material transformationMaterial; // Crear material con shader "Custom/MagicalTransformation"
+    // [SerializeField] private Material colorPreservedMaterial; // YA NO SE USA - Ahora usamos CommandBuffer
     [SerializeField] private float transformationDuration = 2f;
     [SerializeField] private GameObject transformationEffect; // Opcional: prefab de partículas
     [SerializeField] private string transformationShaderProperty = "_TransformationProgress"; // NO CAMBIAR
@@ -66,7 +67,13 @@ public class NPCInteraction : MonoBehaviour
         npcRenderer = GetComponent<Renderer>();
         if (npcRenderer != null)
         {
-            originalMaterial = npcRenderer.material;
+            // Usar sharedMaterial para obtener el material original (no instancia)
+            originalMaterial = npcRenderer.sharedMaterial;
+            Debug.Log($"📝 SAVED original material: {originalMaterial?.name ?? "NULL"}");
+        }
+        else
+        {
+            Debug.LogWarning("❌ No renderer found on NPC");
         }
         
         // Configurar AudioSource si no existe
@@ -107,6 +114,13 @@ public class NPCInteraction : MonoBehaviour
     void OnDestroy()
     {
         MinigameEventSystem.OnMinigameComplete -= OnMinigameCompleted;
+        
+        // NO desregistrar automáticamente - el NPC debe seguir preservando color
+        // Solo desregistrar si específicamente se solicita
+        // if (npcRenderer != null)
+        // {
+        //     ColorPreservationRenderer.UnregisterRenderer(npcRenderer);
+        // }
     }
 
     void Update()
@@ -226,15 +240,27 @@ public class NPCInteraction : MonoBehaviour
             // Crear una instancia del material para este NPC
             Material instanceMaterial = new Material(transformationMaterial);
             
-            // Asignar el sprite original del NPC al material
+            // Obtener el sprite renderer del NPC
             SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
             if (spriteRenderer != null && spriteRenderer.sprite != null)
             {
-                instanceMaterial.SetTexture("_MainTex", spriteRenderer.sprite.texture);
-                Debug.Log("Sprite texture assigned to material");
+                // AUTO-CONFIGURAR: Asignar automáticamente el sprite actual como textura base Y de transformación
+                Texture2D spriteTexture = spriteRenderer.sprite.texture;
+                
+                // Configurar textura principal
+                instanceMaterial.SetTexture("_MainTex", spriteTexture);
+                
+                // NOVEDAD: Usar el mismo sprite como destino de transformación (efecto de "purificación")
+                instanceMaterial.SetTexture("_TransformSprite", spriteTexture);
+                
+                Debug.Log($"Auto-configured sprite texture: {spriteTexture.name}");
+            }
+            else
+            {
+                Debug.LogWarning("No sprite found - using material defaults");
             }
             
-            // Configurar colores personalizados para el shader
+            // AUTO-CONFIGURAR: Colores personalizados para el shader
             if (instanceMaterial.HasProperty("_MagicColor"))
             {
                 instanceMaterial.SetColor("_MagicColor", magicColor);
@@ -247,7 +273,7 @@ public class NPCInteraction : MonoBehaviour
                 Debug.Log($"Transform color set: {transformToColor}");
             }
             
-            // Configurar la información de la esfera para el shader
+            // AUTO-CONFIGURAR: Información de la esfera para el shader
             if (colorSphereComponent != null)
             {
                 Vector3 sphereWorldPos = colorSphereComponent.transform.position;
@@ -276,7 +302,7 @@ public class NPCInteraction : MonoBehaviour
             }
             
             npcRenderer.material = instanceMaterial;
-            Debug.Log("Material instance applied to NPC renderer");
+            Debug.Log("Auto-configured material instance applied to NPC renderer");
             
             // Empezar el fade-out de partículas AHORA para que terminen con la transformación
             // NOTA: Como las partículas ahora duran exactamente 2 segundos desde el ParticleSystem,
@@ -313,13 +339,8 @@ public class NPCInteraction : MonoBehaviour
     
     System.Collections.IEnumerator AnimateTransformation(Material material)
     {
-        // Guardar material original ANTES de cambiar el material del renderer
-        Material originalMaterial = null;
+        // Usar el campo de clase originalMaterial (ya guardado en Start())
         SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
-        if (spriteRenderer != null)
-        {
-            originalMaterial = spriteRenderer.sharedMaterial; // Usar sharedMaterial para obtener el original
-        }
         
         Debug.Log($"Starting transformation animation. Original material: {originalMaterial?.name}");
         
@@ -385,7 +406,7 @@ public class NPCInteraction : MonoBehaviour
             yield return null;
         }
         
-        // Fase 4: Asegurar que vuelva completamente a 0 y restaurar material original
+        // Fase 4: Asegurar que vuelva completamente a 0 y aplicar material de preservación de color
         if (material.HasProperty(transformationShaderProperty))
         {
             material.SetFloat(transformationShaderProperty, 0f);
@@ -393,19 +414,35 @@ public class NPCInteraction : MonoBehaviour
         
         yield return new WaitForSeconds(0.2f); // Pequeña pausa
         
-        // Restaurar el material original del sprite
-        if (originalMaterial != null && spriteRenderer != null)
+        // APLICAR PRESERVACIÓN DE COLOR USANDO COMMANDBUFFER - NO USAR SHADER
+        if (spriteRenderer != null)
         {
-            spriteRenderer.material = originalMaterial;
-            Debug.Log($"Original material restored: {originalMaterial.name}");
+            Debug.Log($"Before material change - Current material: {spriteRenderer.material?.name}");
+            Debug.Log($"Original material to restore: {originalMaterial?.name}");
+            
+            // FORZAR material original o default - NUNCA usar colorPreservedMaterial
+            if (originalMaterial != null)
+            {
+                spriteRenderer.material = originalMaterial;
+                Debug.Log($"✅ RESTORED original material: {originalMaterial.name}");
+            }
+            else
+            {
+                // Usar el material por defecto de sprites
+                spriteRenderer.material = null;
+                Debug.Log("✅ SET material to DEFAULT sprite material");
+            }
+            
+            Debug.Log($"After material change - Current material: {spriteRenderer.material?.name ?? "Default"}");
+            
+            // Registrar en el ColorPreservationRenderer para que renderice DESPUÉS del post-processing
+            ColorPreservationRenderer.RegisterRenderer(spriteRenderer);
+            
+            Debug.Log($"✅ REGISTERED {npcName} with ColorPreservationRenderer for CommandBuffer rendering");
         }
         else
         {
-            Debug.LogWarning("Could not restore original material - using default sprite material");
-            if (spriteRenderer != null)
-            {
-                spriteRenderer.material = null; // Esto usa el material por defecto de sprites
-            }
+            Debug.LogWarning("❌ No SpriteRenderer found for color preservation");
         }
         
         // Limpiar la instancia del material
@@ -588,6 +625,60 @@ public class NPCInteraction : MonoBehaviour
         if (!isMinigameCompleted)
         {
             StartCoroutine(TransformationSequence());
+        }
+    }
+    
+    /// <summary>
+    /// Aplica directamente la preservación de color usando CommandBuffer (para debug/testing)
+    /// </summary>
+    public void ApplyColorPreservation()
+    {
+        if (npcRenderer != null)
+        {
+            SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
+            if (spriteRenderer != null)
+            {
+                Debug.Log($"🔧 MANUAL color preservation for {npcName}");
+                Debug.Log($"Current material: {spriteRenderer.material?.name ?? "Default"}");
+                Debug.Log($"Original material: {originalMaterial?.name ?? "NULL"}");
+                
+                // FORZAR material original - NO usar colorPreservedMaterial
+                if (originalMaterial != null)
+                {
+                    spriteRenderer.material = originalMaterial;
+                    Debug.Log($"✅ Applied original material: {originalMaterial.name}");
+                }
+                else
+                {
+                    spriteRenderer.material = null; // Material por defecto
+                    Debug.Log("✅ Applied default sprite material");
+                }
+                
+                // Registrar para preservación de color usando CommandBuffer
+                ColorPreservationRenderer.RegisterRenderer(spriteRenderer);
+                
+                Debug.Log($"✅ {npcName}: Registered with CommandBuffer for color preservation");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"❌ {npcName}: No renderer found for color preservation!");
+        }
+    }
+    
+    /// <summary>
+    /// Restaura el material original (para debug/testing)
+    /// </summary>
+    public void RestoreOriginalMaterial()
+    {
+        if (originalMaterial != null && npcRenderer != null)
+        {
+            SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.material = originalMaterial;
+                Debug.Log($"{npcName}: Original material restored");
+            }
         }
     }
     

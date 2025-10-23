@@ -9,7 +9,22 @@ public class MainMenu : MonoBehaviour
 
     private void Start()
     {
-            AudioManager.instance.PlayMusic(0);
+        // Reproducir música de forma segura
+        if (AudioManager.instance != null)
+        {
+            if (!AudioManager.instance.TryPlayMusic(0))
+            {
+                Debug.LogWarning("MainMenu: No se puede reproducir música en índice 0. Verifica que el array de música esté configurado en el AudioManager.");
+                // Opcional: intentar con otro índice o mostrar el estado del AudioManager
+                #if UNITY_EDITOR
+                AudioManager.instance.LogAudioInfo();
+                #endif
+            }
+        }
+        else
+        {
+            Debug.LogError("MainMenu: AudioManager.instance es null. Asegúrate de que haya un AudioManager en la escena.");
+        }
     }
 
 

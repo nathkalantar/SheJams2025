@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: New Material
+  m_Name: NPC_MagicTransformation
   m_Shader: {fileID: 4800000, guid: 7d18a45bf61abcc44aa0a50d33262d11, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -48,7 +48,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 65554c880aa04294abab9c18ee2229cf, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -90,7 +90,7 @@ Material:
     - _SrcBlend: 1
     - _TransformationProgress: 0
     - _UVSec: 0
-    - _WaveAmplitude: 0.02
+    - _WaveAmplitude: 0.1
     - _WaveFrequency: 5
     - _ZWrite: 1
     m_Colors:
