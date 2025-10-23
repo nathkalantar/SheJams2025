@@ -26,6 +26,11 @@ public class NPCInteraction : MonoBehaviour
     [SerializeField] private GameObject transformationEffect; // Opcional: prefab de partículas
     [SerializeField] private string transformationShaderProperty = "_TransformationProgress"; // NO CAMBIAR
     
+    [Header("Sprite Transformation")]
+    [SerializeField] private Sprite transformedSprite; // Sprite que aparece cuando el shader llega al máximo
+    // spriteChangeDelay ya no se usa - el cambio ocurre automáticamente en el pico del shader
+    [Tooltip("El sprite cambia automáticamente cuando la transformación del shader llega al máximo (valor 1)")]
+    
     [Header("Transformation Colors")]
     [SerializeField] private Color magicColor = new Color(1f, 0.5f, 1f, 1f); // Color púrpura mágico
     [SerializeField] private Color transformToColor = Color.white; // Color final del NPC
@@ -35,6 +40,7 @@ public class NPCInteraction : MonoBehaviour
     private ColorSphere colorSphereComponent;
     private Renderer npcRenderer;
     private Material originalMaterial;
+    private Sprite originalSprite; // Sprite original antes de la transformación
     private AudioSource audioSource; // Se crea automáticamente
     private bool playerInRange = false;
     private bool isMinigameCompleted = false;  // Keep private, but add public getter below
@@ -70,6 +76,14 @@ public class NPCInteraction : MonoBehaviour
             // Usar sharedMaterial para obtener el material original (no instancia)
             originalMaterial = npcRenderer.sharedMaterial;
             Debug.Log($"📝 SAVED original material: {originalMaterial?.name ?? "NULL"}");
+            
+            // Guardar el sprite original si es un SpriteRenderer
+            SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
+            if (spriteRenderer != null && spriteRenderer.sprite != null)
+            {
+                originalSprite = spriteRenderer.sprite;
+                Debug.Log($"📝 SAVED original sprite: {originalSprite.name}");
+            }
         }
         else
         {
@@ -346,6 +360,7 @@ public class NPCInteraction : MonoBehaviour
         
         // Fase 1: Transformación hacia adelante (0 a 1)
         float elapsedTime = 0f;
+        bool spriteChanged = false; // Flag para cambiar sprite solo una vez
         
         while (elapsedTime < transformationDuration)
         {
@@ -357,6 +372,14 @@ public class NPCInteraction : MonoBehaviour
             {
                 material.SetFloat(transformationShaderProperty, progress);
                 Debug.Log($"Transformation progress: {progress:F2}");
+                
+                // CAMBIAR SPRITE EN EL PICO DE LA TRANSFORMACIÓN (cerca del máximo)
+                if (!spriteChanged && progress >= 0.95f && transformedSprite != null && spriteRenderer != null)
+                {
+                    spriteRenderer.sprite = transformedSprite;
+                    spriteChanged = true;
+                    Debug.Log($"🔄 SPRITE CHANGED to: {transformedSprite.name} (at shader peak: {progress:F2})");
+                }
             }
             else
             {
@@ -377,6 +400,13 @@ public class NPCInteraction : MonoBehaviour
         if (material.HasProperty(transformationShaderProperty))
         {
             material.SetFloat(transformationShaderProperty, 1f);
+        }
+        
+        // Fallback: asegurar que el sprite se cambie si no se cambió durante la animación
+        if (!spriteChanged && transformedSprite != null && spriteRenderer != null)
+        {
+            spriteRenderer.sprite = transformedSprite;
+            Debug.Log($"🔄 SPRITE CHANGED (fallback): {transformedSprite.name}");
         }
         
         // Fase 2: Mantener la transformación por 3 segundos
@@ -412,7 +442,10 @@ public class NPCInteraction : MonoBehaviour
             material.SetFloat(transformationShaderProperty, 0f);
         }
         
-        yield return new WaitForSeconds(0.2f); // Pequeña pausa
+        yield return new WaitForSeconds(0.2f); // Pequeña pausa para el shader
+        
+        // Ya no necesitamos cambiar el sprite aquí - ya se cambió en el pico del shader
+        // El sprite ya debe estar cambiado cuando llegamos a este punto
         
         // APLICAR PRESERVACIÓN DE COLOR USANDO COMMANDBUFFER - NO USAR SHADER
         if (spriteRenderer != null)
@@ -611,10 +644,21 @@ public class NPCInteraction : MonoBehaviour
             colorSphereComponent.animateRadius = false;
         }
         
-        // Resetear material original
-        if (npcRenderer != null && originalMaterial != null)
+        // Resetear material y sprite original
+        if (npcRenderer != null)
         {
-            npcRenderer.material = originalMaterial;
+            if (originalMaterial != null)
+            {
+                npcRenderer.material = originalMaterial;
+            }
+            
+            // Restaurar sprite original
+            SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
+            if (spriteRenderer != null && originalSprite != null)
+            {
+                spriteRenderer.sprite = originalSprite;
+                Debug.Log($"🔄 SPRITE RESTORED to original: {originalSprite.name}");
+            }
         }
         
         Debug.Log($"{npcName}: State reset");
@@ -625,6 +669,39 @@ public class NPCInteraction : MonoBehaviour
         if (!isMinigameCompleted)
         {
             StartCoroutine(TransformationSequence());
+        }
+    }
+    
+    /// <summary>
+    /// Test rápido del cambio de sprite (simula el cambio en el pico del shader)
+    /// </summary>
+    public void TestSpriteChangeOnly()
+    {
+        if (transformedSprite != null && npcRenderer != null)
+        {
+            SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = transformedSprite;
+                Debug.Log($"🔄 TEST: Changed sprite to {transformedSprite.name} (simulating shader peak)");
+                
+                // También aplicar CommandBuffer para preservación de color
+                if (originalMaterial != null)
+                {
+                    spriteRenderer.material = originalMaterial;
+                }
+                else
+                {
+                    spriteRenderer.material = null;
+                }
+                
+                ColorPreservationRenderer.RegisterRenderer(spriteRenderer);
+                Debug.Log("✅ TEST: Applied color preservation");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("❌ TEST: No transformed sprite assigned or no renderer found!");
         }
     }
     
@@ -679,6 +756,46 @@ public class NPCInteraction : MonoBehaviour
                 spriteRenderer.material = originalMaterial;
                 Debug.Log($"{npcName}: Original material restored");
             }
+        }
+    }
+    
+    /// <summary>
+    /// Cambia al sprite transformado manualmente (para debug/testing)
+    /// </summary>
+    public void ApplyTransformedSprite()
+    {
+        if (transformedSprite != null && npcRenderer != null)
+        {
+            SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = transformedSprite;
+                Debug.Log($"🔄 MANUALLY changed sprite to: {transformedSprite.name}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"{npcName}: No transformed sprite assigned or no renderer found!");
+        }
+    }
+    
+    /// <summary>
+    /// Restaura el sprite original manualmente (para debug/testing)
+    /// </summary>
+    public void RestoreOriginalSprite()
+    {
+        if (originalSprite != null && npcRenderer != null)
+        {
+            SpriteRenderer spriteRenderer = npcRenderer as SpriteRenderer;
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = originalSprite;
+                Debug.Log($"🔄 MANUALLY restored sprite to: {originalSprite.name}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"{npcName}: No original sprite saved or no renderer found!");
         }
     }
     

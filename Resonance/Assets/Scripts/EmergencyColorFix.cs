@@ -65,13 +65,34 @@ public class EmergencyColorFix : MonoBehaviour
     {
         if (spriteRenderer != null)
         {
-            GUILayout.BeginArea(new Rect(10, 150, 400, 80));
+            GUILayout.BeginArea(new Rect(10, 150, 400, 160));
             GUILayout.Label($"Emergency Fix: {gameObject.name}");
             GUILayout.Label($"Material: {spriteRenderer.material?.name ?? "Default"}");
+            GUILayout.Label($"Sprite: {spriteRenderer.sprite?.name ?? "NULL"}");
             
             if (GUILayout.Button($"Fix Color (Press {fixKey})"))
             {
                 ApplyFix();
+            }
+            
+            // Botones adicionales para NPCs con script NPCInteraction
+            NPCInteraction npcScript = GetComponent<NPCInteraction>();
+            if (npcScript != null)
+            {
+                if (GUILayout.Button("Test Sprite Change Only"))
+                {
+                    npcScript.TestSpriteChangeOnly();
+                }
+                
+                if (GUILayout.Button("Test Transformed Sprite"))
+                {
+                    npcScript.ApplyTransformedSprite();
+                }
+                
+                if (GUILayout.Button("Restore Original Sprite"))
+                {
+                    npcScript.RestoreOriginalSprite();
+                }
             }
             
             GUILayout.EndArea();
