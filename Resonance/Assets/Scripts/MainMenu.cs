@@ -30,6 +30,13 @@ public class MainMenu : MonoBehaviour
 
     public void NextScene()
     {
+        StartCoroutine(LoadSceneWithDelay());
+    }
+    
+    private IEnumerator LoadSceneWithDelay()
+    {
+        // Esperar 0.5 segundos antes de cambiar de escena
+        yield return new WaitForSeconds(0.5f);
         SceneManager.LoadScene(introSceneName);
     }
 
