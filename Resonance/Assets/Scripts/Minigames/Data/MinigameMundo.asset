@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a592704ebc1e66141a8145fa14ce9c03, type: 3}
+  m_Name: MinigameMundo
+  m_EditorClassIdentifier: 
+  minigameName: Mundo
+  backgroundSprite: {fileID: 21300000, guid: 615de0a13c79a3044972d690b19b6a83, type: 3}
+  backgroundColor: {r: 1, g: 1, b: 1, a: 1}
+  items:
+  - sprite: {fileID: 21300000, guid: ee6800561ac70e34182278f934f6b426, type: 3}
+    startPosition: {x: 3, y: -435}
+    size: {x: 100, y: 100}
+    correctDropZoneIndex: 0
+  - sprite: {fileID: 21300000, guid: 33d98c9a426f9204bbf8a179d347913a, type: 3}
+    startPosition: {x: 3, y: -265}
+    size: {x: 100, y: 100}
+    correctDropZoneIndex: 1
+  - sprite: {fileID: 21300000, guid: 50ef7e2bdbf33a14284d90c3e27f8608, type: 3}
+    startPosition: {x: 3, y: 380}
+    size: {x: 100, y: 100}
+    correctDropZoneIndex: 2
+  - sprite: {fileID: 21300000, guid: 630f44781b85dca4198e67388d1b5802, type: 3}
+    startPosition: {x: 3, y: -30}
+    size: {x: 100, y: 100}
+    correctDropZoneIndex: 3
+  - sprite: {fileID: 21300000, guid: f5a3b764f20ea324684d6f1adb0b989f, type: 3}
+    startPosition: {x: 3, y: 265}
+    size: {x: 100, y: 100}
+    correctDropZoneIndex: 4
+  dropZones:
+  - position: {x: -9, y: -421}
+    size: {x: 100, y: 100}
+  - position: {x: 74, y: -171}
+    size: {x: 100, y: 100}
+  - position: {x: -84, y: 64}
+    size: {x: 100, y: 100}
+  - position: {x: -5, y: 195}
+    size: {x: 100, y: 100}
+  - position: {x: 66, y: 318}
+    size: {x: 100, y: 100}
+  successSound: {fileID: 0}
+  failSound: {fileID: 0}
