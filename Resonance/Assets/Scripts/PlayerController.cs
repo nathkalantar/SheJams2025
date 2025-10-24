@@ -3,12 +3,15 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float runSpeed = 8f; // Velocidad al correr
     [SerializeField] private Animator animator;
     [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private Transform cameraTransform; // Referencia a la cámara
 
     private CharacterController controller;
     private Vector3 moveDirection;
     private bool facingRight = false;
+    private bool isRunning = false; // Para detectar si está corriendo
 
     // Public property for NPCs to access the player's last movement direction
     public Vector3 lastMoveDirection { get; private set; } = Vector3.forward;
@@ -43,6 +46,12 @@ public class PlayerController : MonoBehaviour
     {
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
+
+        // Detectar si se está presionando Shift para correr
+        isRunning = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+        // Elegir velocidad según si está corriendo o caminando
+        float currentSpeed = isRunning ? runSpeed : moveSpeed;
 
         // Get camera-relative directions (flattened to XZ plane for 2.5D movement)
         Vector3 cameraForward = Camera.main.transform.forward;
@@ -104,6 +113,7 @@ public class PlayerController : MonoBehaviour
         bool isWalking = Mathf.Abs(horizontal) > 0.1f || Mathf.Abs(vertical) > 0.1f;
 
         animator.SetBool("isWalking", isWalking);
+        animator.SetBool("isRunning", isRunning && isWalking); // Solo corre si se está moviendo
     }
 
     void HandleFlip()
