@@ -87,13 +87,17 @@ public class AudioManager : MonoBehaviour
     }
 
     // Play walking sound (one-shot)
+    // Play walking sound (looping)
+    // Play walking sound (looping with reduced delay)
     public void PlayWalk()
     {
         Debug.Log("AudioManager: PlayWalk() called");  // Debug: Check if this appears
         if (walkingAudioSource != null && walkingAudioSource.clip != null)
         {
-            Debug.Log("AudioManager: Playing walking sound");  // Debug: Check if this appears
-            walkingAudioSource.PlayOneShot(walkingAudioSource.clip);
+            Debug.Log("AudioManager: Playing walking sound (looping)");  // Debug: Check if this appears
+            walkingAudioSource.loop = true;  // Enable looping
+            walkingAudioSource.time = 0f;  // Reset to start of clip for instant play
+            walkingAudioSource.Play();  // Start looping immediately
         }
         else
         {
