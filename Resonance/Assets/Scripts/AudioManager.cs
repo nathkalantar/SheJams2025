@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
+    [SerializeField] private AudioSource walkingAudioSource;  // For walking sounds   
     public static AudioManager instance;
     public AudioSource audioS, audioM;
     public AudioClip[] pistas_Sfx, pistas_Musica;
@@ -16,6 +17,13 @@ public class AudioManager : MonoBehaviour
             DontDestroyOnLoad(this.gameObject);
         }
         else Destroy(gameObject);
+
+        // Ensure walkingAudioSource doesn't play on awake
+        if (walkingAudioSource != null)
+        {
+            walkingAudioSource.playOnAwake = false;
+            walkingAudioSource.Stop();  // Stop any auto-play
+        }
     }
 
     public void PlaySound(int index, float delay = 0f)
@@ -45,10 +53,6 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void PlayJump()
-    {
-        PlaySound(0);
-    }
     public void PlayHurt()
     {
         PlaySound(1);
@@ -80,6 +84,35 @@ public class AudioManager : MonoBehaviour
     public void PlayWin()
     {
         PlaySound(7);
+    }
+
+    // Play walking sound (one-shot)
+    public void PlayWalk()
+    {
+        Debug.Log("AudioManager: PlayWalk() called");  // Debug: Check if this appears
+        if (walkingAudioSource != null && walkingAudioSource.clip != null)
+        {
+            Debug.Log("AudioManager: Playing walking sound");  // Debug: Check if this appears
+            walkingAudioSource.PlayOneShot(walkingAudioSource.clip);
+        }
+        else
+        {
+            Debug.LogWarning("AudioManager: walkingAudioSource or clip is null");  // Debug: Check for null issues
+        }
+    }
+    // Stop the walking sound
+    public void StopWalk()
+    {
+        Debug.Log("AudioManager: StopWalk() called");  // Debug: Check if this appears
+        if (walkingAudioSource != null && walkingAudioSource.isPlaying)
+        {
+            Debug.Log("AudioManager: Stopping walking sound");  // Debug: Check if this appears
+            walkingAudioSource.Stop();
+        }
+        else
+        {
+            Debug.LogWarning("AudioManager: walkingAudioSource is null or not playing");  // Debug: Check for null issues
+        }
     }
 
     public void PlayMusic(int index)
@@ -194,3 +227,4 @@ public class AudioManager : MonoBehaviour
         Debug.Log($"- SFX Volume: {audioS?.volume ?? 0f}");
     }
 }
+
