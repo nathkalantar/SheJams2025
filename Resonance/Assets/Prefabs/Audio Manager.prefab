@@ -310,7 +310,9 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  pistas_Musica: []
+  pistas_Musica:
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!1 &6466891178881937868
 GameObject:
   m_ObjectHideFlags: 0

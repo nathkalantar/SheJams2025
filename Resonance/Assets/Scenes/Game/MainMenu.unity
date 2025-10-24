@@ -819,6 +819,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Audio Manager
       objectReference: {fileID: 0}
+    - target: {fileID: 9007803279623352819, guid: b6fcbfb31899ad348af0838910a5734e, type: 3}
+      propertyPath: pistas_Musica.Array.size
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

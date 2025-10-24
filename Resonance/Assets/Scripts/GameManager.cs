@@ -23,8 +23,13 @@ public class GameManager : MonoBehaviour
     private int currentFPSIndex = 1; // Default to 60 FPS
     private GUIStyle fpsStyle;
 
+    void Start()
+    {
+        AudioManager.instance.PlayMusic(1);
+    }
+
     #region Unity Lifecycle
-    
+
     private void Awake()
     {
         // Singleton setup
