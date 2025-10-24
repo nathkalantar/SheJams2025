@@ -919,7 +919,8 @@ public class NPCInteraction : MonoBehaviour
         float totalTransformationTime = 6.5f;
         float stopEmissionDuration = totalTransformationTime * 0.25f; // 25% del tiempo para parar emisión (1.6s)
         float fadeWaitTime = totalTransformationTime * 0.75f; // 75% restante para fade (4.9s)
-        
+        AudioManager.instance.PlayDesbloquearNPC();
+
         float elapsed = 0f;
         
         while (elapsed < stopEmissionDuration)

@@ -53,38 +53,25 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void PlayHurt()
+    public void PlayDesbloquearNPC()
     {
-        PlaySound(1);
+        PlaySound(0);
     }
     public void PlayCollectable()
     {
-        PlaySound(2);
+        PlaySound(1);
     }
 
     public void PlayDead()
     {
-        PlaySound(3);
+        PlaySound(2);
     }
 
     public void PlayClick()
     {
-        PlaySound(4);
+        PlaySound(3);
     }
 
-    public void PlayPowerTechGirl()
-    {
-        PlaySound(5);
-    }
-
-    public void PlayPowerArtGirl()
-    {
-        PlaySound(6);
-    }
-    public void PlayWin()
-    {
-        PlaySound(7);
-    }
 
     // Play walking sound (one-shot)
     // Play walking sound (looping)

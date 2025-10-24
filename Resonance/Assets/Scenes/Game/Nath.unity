@@ -8219,6 +8219,14 @@ PrefabInstance:
       propertyPath: walkingAudioSource
       value: 
       objectReference: {fileID: 1962050709}
+    - target: {fileID: 9007803279623352819, guid: b6fcbfb31899ad348af0838910a5734e, type: 3}
+      propertyPath: pistas_Sfx.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: a641013312406eb4da2a6a21e32df09f, type: 3}
+    - target: {fileID: 9007803279623352819, guid: b6fcbfb31899ad348af0838910a5734e, type: 3}
+      propertyPath: pistas_Sfx.Array.data[1]
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

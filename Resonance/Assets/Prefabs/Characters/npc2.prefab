@@ -117,7 +117,6 @@ MonoBehaviour:
   transformationEffect: {fileID: 1954881429659826171, guid: 0e2fbf2434bdc5c4293035db96ae87da, type: 3}
   transformationShaderProperty: _TransformationProgress
   transformedSprite: {fileID: 0}
-  spriteChangeDelay: 1
   magicColor: {r: 1, g: 0.5, b: 1, a: 1}
   transformToColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!136 &6580639674374498227
