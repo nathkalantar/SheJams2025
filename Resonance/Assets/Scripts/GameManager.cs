@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        AudioManager.instance.PlayMusic(1);
+      
     }
 
     #region Unity Lifecycle
