@@ -84,7 +84,7 @@ public class AudioManager : MonoBehaviour
             Debug.Log("AudioManager: Playing walking sound (looping)");  // Debug: Check if this appears
             walkingAudioSource.loop = true;  // Enable looping
             walkingAudioSource.time = 0f;  // Reset to start of clip for instant play
-            walkingAudioSource.Play();  // Start looping immediately
+            walkingAudioSource.PlayScheduled(AudioSettings.dspTime);  // Schedule for immediate play to reduce delay
         }
         else
         {

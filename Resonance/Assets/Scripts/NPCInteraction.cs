@@ -669,6 +669,7 @@ public class NPCInteraction : MonoBehaviour
         if (!isMinigameCompleted)
         {
             StartCoroutine(TransformationSequence());
+            AudioManager.instance.PlayDesbloquearNPC();
         }
     }
     
@@ -870,7 +871,8 @@ public class NPCInteraction : MonoBehaviour
         if (particleSystems.Length == 0) yield break;
         
         Debug.Log($"Found {particleSystems.Length} particle systems to fade out");
-        
+        AudioManager.instance.PlayDesbloquearNPC();
+
         // Guardar las configuraciones actuales y módulos de color
         float[] currentEmissionRate = new float[particleSystems.Length];
         ParticleSystem.ColorOverLifetimeModule[] colorModules = new ParticleSystem.ColorOverLifetimeModule[particleSystems.Length];
@@ -919,8 +921,7 @@ public class NPCInteraction : MonoBehaviour
         float totalTransformationTime = 6.5f;
         float stopEmissionDuration = totalTransformationTime * 0.25f; // 25% del tiempo para parar emisión (1.6s)
         float fadeWaitTime = totalTransformationTime * 0.75f; // 75% restante para fade (4.9s)
-        AudioManager.instance.PlayDesbloquearNPC();
-
+        
         float elapsed = 0f;
         
         while (elapsed < stopEmissionDuration)
