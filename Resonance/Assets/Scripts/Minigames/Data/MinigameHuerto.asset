@@ -13,23 +13,28 @@ MonoBehaviour:
   m_Name: MinigameHuerto
   m_EditorClassIdentifier: 
   minigameName: Huerto
-  backgroundSprite: {fileID: 21300000, guid: 9e6c139202561a040a949a4ec7740690, type: 3}
+  backgroundSprite: {fileID: 21300000, guid: 4ff8e9abfdb65f341a2e1802276a2a34, type: 3}
   backgroundColor: {r: 1, g: 1, b: 1, a: 1}
   items:
-  - sprite: {fileID: 21300000, guid: 65554c880aa04294abab9c18ee2229cf, type: 3}
+  - sprite: {fileID: 21300000, guid: 40c324d812c13b24e988520a4504c5f3, type: 3}
     startPosition: {x: 3, y: 380}
+    size: {x: 100, y: 100}
     correctDropZoneIndex: 0
-  - sprite: {fileID: 21300000, guid: aa46e2a5a49147d49bba67f5cfadbd65, type: 3}
-    startPosition: {x: 3, y: 265}
+  - sprite: {fileID: 21300000, guid: edf693bf815b0ec419f95ead2b6cc2cf, type: 3}
+    startPosition: {x: 3, y: 190}
+    size: {x: 100, y: 100}
     correctDropZoneIndex: 1
-  - sprite: {fileID: 21300000, guid: 801823c1ba4206641a95d144090e47d5, type: 3}
+  - sprite: {fileID: 21300000, guid: c8f2a210169945144a9ef7be4e22739e, type: 3}
     startPosition: {x: 3, y: -30}
+    size: {x: 100, y: 100}
     correctDropZoneIndex: 2
-  - sprite: {fileID: 21300000, guid: 584f07990aec9694b87aac372bd932e3, type: 3}
-    startPosition: {x: 3, y: -265}
+  - sprite: {fileID: 21300000, guid: 943543bf1323ebb40813572c418b4dfb, type: 3}
+    startPosition: {x: 3, y: -240}
+    size: {x: 100, y: 100}
     correctDropZoneIndex: 3
-  - sprite: {fileID: 21300000, guid: 7d73579c3a590234d89e95835844cf72, type: 3}
+  - sprite: {fileID: 21300000, guid: ab2e2c418c5fde74dae0711da12ae2cc, type: 3}
     startPosition: {x: 3, y: -435}
+    size: {x: 100, y: 100}
     correctDropZoneIndex: 4
   dropZones:
   - position: {x: -420, y: 384}

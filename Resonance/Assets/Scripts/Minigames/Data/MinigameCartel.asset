@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MinigameCartel
   m_EditorClassIdentifier: 
   minigameName: Cartel
-  backgroundSprite: {fileID: 21300000, guid: 8144fce3cb65f2f4daf2d71fe4963e23, type: 3}
+  backgroundSprite: {fileID: 21300000, guid: 023ef54f9af48f24080af3342460a6bb, type: 3}
   backgroundColor: {r: 1, g: 1, b: 1, a: 1}
   items:
   - sprite: {fileID: 21300000, guid: 05a0a5aa4ab9d4e4398013d1f22bbfeb, type: 3}
