@@ -111,7 +111,7 @@ MonoBehaviour:
   colorSpherePrefab: {fileID: 558099710350705355, guid: 0f833298ce11d3f4c9a26299f84d1154, type: 3}
   targetSphereRadius: 10
   sphereGrowSpeed: 2
-  victorySound: {fileID: 0}
+  victorySound: {fileID: 8300000, guid: a641013312406eb4da2a6a21e32df09f, type: 3}
   transformationMaterial: {fileID: 2100000, guid: 7839667fd11d2ef43905a132899d5ef6, type: 2}
   transformationDuration: 0.5
   transformationEffect: {fileID: 1954881429659826171, guid: 0e2fbf2434bdc5c4293035db96ae87da, type: 3}
