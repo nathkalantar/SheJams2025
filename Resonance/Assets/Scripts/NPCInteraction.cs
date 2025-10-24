@@ -214,13 +214,6 @@ public class NPCInteraction : MonoBehaviour
     {
         Debug.Log($"{npcName}: Starting magical transformation!");
         
-        // 1. Reproducir sonido de victoria
-        if (audioSource != null && victorySound != null)
-        {
-            audioSource.PlayOneShot(victorySound);
-            Debug.Log("Victory sound played!");
-        }
-        
         // 2. Hacer aparecer y crecer la ColorSphere ANTES de la transformación
         if (colorSphereComponent != null)
         {
@@ -247,7 +240,14 @@ public class NPCInteraction : MonoBehaviour
         {
             Debug.LogWarning("No transformation effect prefab assigned!");
         }
-        
+
+        // 1. Reproducir sonido de victoria
+        if (audioSource != null && victorySound != null)
+        {
+            audioSource.PlayOneShot(victorySound);
+            Debug.Log("Victory sound played!");
+        }
+
         // 4. Iniciar shader de transformación mágica
         if (npcRenderer != null && transformationMaterial != null)
         {
