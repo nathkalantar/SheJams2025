@@ -1672,9 +1672,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f14f178b85312bc4d8d2c494afb85789, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  videoPlayer: {fileID: 0}
-  mainMenuPanel: {fileID: 1678176948}
-  levelToLoad: Nath
+  introSceneName: IntroScene
 --- !u!1 &1150233226
 GameObject:
   m_ObjectHideFlags: 0

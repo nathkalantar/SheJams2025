@@ -311,7 +311,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   pistas_Musica:
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 71b05230740d923429da33b5d49d2d48, type: 3}
   - {fileID: 8300000, guid: f7da0e719fd286843a7df57c51342779, type: 3}
 --- !u!1 &6466891178881937868
 GameObject:
